@@ -122,7 +122,7 @@ export default function AssetStatus({ onViewNFT }: AssetStatusProps) {
           <p className="text-sm text-muted-foreground">房地產 • 提交於 2025/10/25</p>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {statusSteps.map((step, index) => {
             const Icon = step.icon;
             const isLast = index === statusSteps.length - 1;
@@ -140,13 +140,6 @@ export default function AssetStatus({ onViewNFT }: AssetStatusProps) {
                     }`}>
                       {getStatusIcon(step.status, Icon)}
                     </div>
-                    {!isLast && (
-                      <div className={`w-0.5 h-4 mt-2 ${
-                        step.status === "completed" 
-                          ? "bg-success" 
-                          : "bg-border"
-                      }`} />
-                    )}
                   </div>
                   
                   <div className="flex-1 pb-1">

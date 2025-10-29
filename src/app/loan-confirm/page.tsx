@@ -10,16 +10,17 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function LoanConfirm() {
   const router = useRouter();
-  const [agreed, setAgreed] = useState(false);
   const [loanData, setLoanData] = useState<any>(null);
+  const [agreed, setAgreed] = useState(false);
 
   useEffect(() => {
-    // Retrieve loan data from sessionStorage
-    if (typeof window !== 'undefined') {
-      const data = sessionStorage.getItem('loanData');
+    // 從 sessionStorage 讀取數據
+    if (typeof window !== "undefined") {
+      const data = sessionStorage.getItem("loanData");
       if (data) {
         setLoanData(JSON.parse(data));
       } else {
+        // 如果沒有數據，重定向到起始頁
         router.push("/my-assets");
       }
     }
@@ -35,6 +36,7 @@ export default function LoanConfirm() {
   dueDate.setDate(dueDate.getDate() + selectedTerm);
 
   const handleConfirm = () => {
+    // 繼續傳遞到下一頁
     router.push("/loan-processing");
   };
 
@@ -209,7 +211,7 @@ export default function LoanConfirm() {
             onClick={handleConfirm}
           >
             <Lock className="w-4 h-4 mr-2" />
-            確認發起借款並簽署
+            確認借款並簽署
           </Button>
         </div>
       </div>

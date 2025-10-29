@@ -1,20 +1,19 @@
+"use client";
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Sparkles, ExternalLink, ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function NFTSuccess() {
+  const router = useRouter();
+
+  const handleStartLoan = () => {
+    router.push("/loan-setup/RWA-2025-001");
+  };
+
   return (
     <div className="space-y-8 max-w-2xl mx-auto text-center">
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-32 h-32 bg-success/20 rounded-full animate-ping" />
-        </div>
-        <div className="relative flex items-center justify-center">
-          <div className="w-24 h-24 bg-success rounded-full flex items-center justify-center">
-            <CheckCircle2 className="w-12 h-12 text-white" />
-          </div>
-        </div>
-      </div>
 
       <div className="space-y-3">
         <div className="flex items-center justify-center gap-2">
@@ -62,39 +61,21 @@ export default function NFTSuccess() {
         </div>
       </Card>
 
-      <div className="grid sm:grid-cols-2 gap-4">
-        <Card className="p-6 text-left hover:shadow-lg transition-shadow cursor-pointer group">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-primary/10 rounded-lg">
-              <ExternalLink className="w-6 h-6 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                查看 NFT 詳情
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                在區塊鏈瀏覽器上查看您的 NFT
-              </p>
-            </div>
+      <Card className="p-6 text-left hover:shadow-lg transition-shadow cursor-pointer group max-w-md mx-auto">
+        <div className="flex items-start gap-4">
+          <div className="p-3 bg-primary/10 rounded-lg">
+            <ExternalLink className="w-6 h-6 text-primary" />
           </div>
-        </Card>
-
-        <Card className="p-6 text-left hover:shadow-lg transition-shadow cursor-pointer group">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-primary/10 rounded-lg">
-              <ArrowRight className="w-6 h-6 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                前往借貸市場
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                使用 NFT 作為抵押品進行借款
-              </p>
-            </div>
+          <div className="flex-1">
+            <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+              查看 NFT 詳情
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              在區塊鏈瀏覽器上查看您的 NFT
+            </p>
           </div>
-        </Card>
-      </div>
+        </div>
+      </Card>
 
       <Card className="p-6 bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
         <div className="space-y-4">
@@ -102,7 +83,7 @@ export default function NFTSuccess() {
           <p className="text-sm text-muted-foreground">
             您現在可以使用這個 NFT 作為抵押品，在我們的平台上申請借款。根據您的資產估值，您最多可以借款 NT$ 4,480,000（LTV 70%）。
           </p>
-          <Button className="w-full" size="lg">
+          <Button className="w-full" size="lg" onClick={handleStartLoan}>
             開始借款
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>

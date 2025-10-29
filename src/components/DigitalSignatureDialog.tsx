@@ -45,8 +45,10 @@ export default function DigitalSignatureDialog({
     });
 
     // Enable drawing brush
-    canvas.freeDrawingBrush.color = "#000000";
-    canvas.freeDrawingBrush.width = 2;
+    if (canvas.freeDrawingBrush) {
+      canvas.freeDrawingBrush.color = "#000000";
+      canvas.freeDrawingBrush.width = 2;
+    }
 
     // Ensure touch works and cursor shows drawing intent
     canvas.upperCanvasEl.style.touchAction = "none";

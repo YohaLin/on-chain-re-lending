@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -35,7 +35,7 @@ const ANNUAL_RATE = 0.05; // 5%
 export default function LoanSetup() {
   const router = useRouter();
   const params = useParams();
-  const assetId = params.assetId;
+  const assetId = params?.assetId as string;
 
   const [loanAmount, setLoanAmount] = useState(5000000);
   const [selectedTerm, setSelectedTerm] = useState(180);
@@ -51,16 +51,18 @@ export default function LoanSetup() {
   const actualAmount = loanAmount - interest;
 
   const handleContinue = () => {
-    // In Next.js App Router, we need to use a different approach for passing state
-    // We'll use localStorage or URL params, or create a context
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('loanData', JSON.stringify({
-        asset: mockAsset,
-        loanAmount,
-        selectedTerm,
-        interest,
-        actualAmount,
-      }));
+    // 使用 sessionStorage 傳遞狀態
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(
+        "loanData",
+        JSON.stringify({
+          asset: mockAsset,
+          loanAmount,
+          selectedTerm,
+          interest,
+          actualAmount,
+        })
+      );
     }
     router.push("/loan-confirm");
   };
@@ -84,8 +86,8 @@ export default function LoanSetup() {
         {/* 資產資訊 */}
         <Card className="mb-6">
           <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-muted relative">
+            <div className="space-y-4">
+              <div className="w-full aspect-[16/9] rounded-lg overflow-hidden bg-muted relative">
                 <Image
                   src={mockAsset.image}
                   alt={mockAsset.name}
@@ -93,9 +95,9 @@ export default function LoanSetup() {
                   className="object-cover"
                 />
               </div>
-              <div className="flex-1">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-lg">{mockAsset.name}</h3>
+              <div>
+                <div className="mb-2">
+                  <h3 className="font-semibold text-lg mb-2">{mockAsset.name}</h3>
                   <Badge>{mockAsset.type}</Badge>
                 </div>
                 <div className="space-y-1 text-sm">

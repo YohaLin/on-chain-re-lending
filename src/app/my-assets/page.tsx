@@ -1,10 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
+import TabBar from "@/components/TabBar";
 import artImage from "@/assets/art-painting.png";
 import carImage from "@/assets/car-vehicle.png";
 import jewelryImage from "@/assets/jewelry-ring.png";
@@ -62,17 +63,12 @@ export default function MyAssets() {
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">我的資產</h1>
-            <Button variant="outline" onClick={() => router.push("/")}>
-              返回首頁
-            </Button>
-          </div>
+          <h1 className="text-2xl font-bold">我的NFT</h1>
         </div>
       </header>
 
       {/* Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-24">
         <div className="mb-6">
           <p className="text-muted-foreground">
             您共有 {userAssets.length} 個已代幣化的資產，可用於抵押借款
@@ -124,6 +120,8 @@ export default function MyAssets() {
           ))}
         </div>
       </div>
+
+      <TabBar />
     </div>
   );
 }

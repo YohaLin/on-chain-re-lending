@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,6 @@ import realEstateBuilding from "@/assets/real-estate-building.png";
 import artPainting from "@/assets/art-painting.png";
 import carVehicle from "@/assets/car-vehicle.png";
 import wineBottle from "@/assets/wine-bottle.png";
-import Image from "next/image";
 
 type AssetType = "real-estate" | "art" | "jewelry" | "vehicle" | "other";
 
@@ -32,6 +32,7 @@ export default function AssetSubmission({ onSubmitSuccess }: AssetSubmissionProp
   const [showDetails, setShowDetails] = useState(false);
   const [assetName, setAssetName] = useState("");
   const [assetDescription, setAssetDescription] = useState("");
+  const [assetAddress, setAssetAddress] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const { toast } = useToast();
 
@@ -70,10 +71,10 @@ export default function AssetSubmission({ onSubmitSuccess }: AssetSubmissionProp
   };
 
   const handleSubmit = () => {
-    if (!selectedType || !assetName || !assetDescription || files.length === 0) {
+    if (!selectedType || !assetName || !assetDescription || !assetAddress || files.length === 0) {
       toast({
         title: "請填寫所有必填欄位",
-        description: "請選擇資產類型、填寫資產名稱和描述，並上傳至少一個文件",
+        description: "請選擇資產類型、填寫資產名稱、描述、地址，並上傳至少一個文件",
         variant: "destructive",
       });
       return;
@@ -132,6 +133,17 @@ export default function AssetSubmission({ onSubmitSuccess }: AssetSubmissionProp
                   value={assetDescription}
                   onChange={(e) => setAssetDescription(e.target.value)}
                   className="mt-2 min-h-32"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="asset-address">資產地址 *</Label>
+                <Input
+                  id="asset-address"
+                  placeholder="請輸入資產地址"
+                  value={assetAddress}
+                  onChange={(e) => setAssetAddress(e.target.value)}
+                  className="mt-2"
                 />
               </div>
 
@@ -209,20 +221,14 @@ export default function AssetSubmission({ onSubmitSuccess }: AssetSubmissionProp
           return (
             <Card
               key={type.id}
-              className="cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 border-0"
+              className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-primary border-2 border-transparent rounded-2xl"
               onClick={() => handleTypeSelect(type.id as AssetType)}
             >
               <div className="p-4 sm:p-6 md:p-8 flex flex-col items-center text-center space-y-3 sm:space-y-4">
-                <div className="transition-transform hover:scale-110 relative">
-                  <Image
-                    src={type.image}
-                    alt={type.name}
-                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 relative z-10 object-contain"
-                  />
+              <div className="transition-transform hover:scale-110 relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24">
+                  <Image src={type.image} alt={type.name} fill className="object-contain z-10" />
                 </div>
-                <h3 className="font-semibold text-base sm:text-lg">
-                  {type.name}
-                </h3>
+                <h3 className="font-semibold text-base sm:text-lg">{type.name}</h3>
               </div>
             </Card>
           );

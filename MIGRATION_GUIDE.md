@@ -1,6 +1,7 @@
 # React Router 轉換至 Next.js App Router 遷移指南
 
 ## 目錄
+
 1. [專案結構變更](#專案結構變更)
 2. [路由系統轉換](#路由系統轉換)
 3. [導航 API 變更](#導航-api-變更)
@@ -14,6 +15,7 @@
 ## 專案結構變更
 
 ### 舊結構（React Router）
+
 ```
 src/
 ├── pages/
@@ -27,6 +29,7 @@ src/
 ```
 
 ### 新結構（Next.js App Router）
+
 ```
 src/
 ├── app/
@@ -53,6 +56,7 @@ src/
 ### 1. 基本路由
 
 #### React Router (舊)
+
 ```tsx
 // App.tsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -70,6 +74,7 @@ const App = () => (
 ```
 
 #### Next.js App Router (新)
+
 ```
 app/
 ├── page.tsx                    # / 路由
@@ -79,6 +84,7 @@ app/
 ```
 
 **規則：**
+
 - 刪除 `App.tsx` 和 `main.tsx`
 - 每個路由變成一個資料夾，內含 `page.tsx`
 - 檔案系統即路由配置
@@ -86,8 +92,9 @@ app/
 ### 2. 動態路由
 
 #### React Router (舊)
+
 ```tsx
-<Route path="/loan-setup/:assetId" element={<LoanSetup />} />
+<Route path="/loan-setup/:assetId" element={<LoanSetup />} />;
 
 // 在組件中
 import { useParams } from "react-router-dom";
@@ -95,6 +102,7 @@ const { assetId } = useParams();
 ```
 
 #### Next.js App Router (新)
+
 ```
 app/
 └── loan-setup/
@@ -117,17 +125,21 @@ export default function LoanSetup() {
 ```
 
 **規則：**
+
 - 動態參數用 `[paramName]` 資料夾命名
 - 使用 `next/navigation` 的 `useParams()`
+- 務必加上 "use client"
 
 ### 3. Catch-all 路由（404）
 
 #### React Router (舊)
+
 ```tsx
 <Route path="*" element={<NotFound />} />
 ```
 
 #### Next.js App Router (新)
+
 ```tsx
 // app/not-found.tsx
 "use client";
@@ -145,8 +157,10 @@ export default function NotFound() {
 ```
 
 **規則：**
+
 - 建立 `app/not-found.tsx`
 - Next.js 會自動處理未匹配的路由
+- 務必加上 "use client"
 
 ---
 
@@ -155,6 +169,7 @@ export default function NotFound() {
 ### 1. 基本導航
 
 #### React Router (舊)
+
 ```tsx
 import { useNavigate } from "react-router-dom";
 
@@ -170,6 +185,7 @@ function MyComponent() {
 ```
 
 #### Next.js App Router (新)
+
 ```tsx
 "use client";
 
@@ -188,29 +204,80 @@ export default function MyComponent() {
 
 ### 2. 導航方法對照表
 
-| React Router | Next.js App Router | 說明 |
-|-------------|-------------------|------|
-| `navigate("/path")` | `router.push("/path")` | 前往指定路徑 |
-| `navigate("/path", { replace: true })` | `router.replace("/path")` | 取代當前歷史記錄 |
-| `navigate(-1)` | `router.back()` | 返回上一頁 |
-| `navigate(1)` | `router.forward()` | 前往下一頁 |
-| ❌ | `router.refresh()` | 重新載入當前路由 |
-| ❌ | `router.prefetch("/path")` | 預先載入路由 |
+| React Router                             | Next.js App Router             | 說明             |
+| ---------------------------------------- | ------------------------------ | ---------------- |
+| `navigate("/path")`                      | `router.push("/path")`         | 導航到新頁面     |
+| `navigate("/path", { replace: true })`   | `router.replace("/path")`      | 取代當前歷史記錄 |
+| `navigate(-1)`                           | `router.back()`                | 返回上一頁       |
+| `navigate(1)`                            | `router.forward()`             | 前往下一頁       |
+| `navigate("/path", { state: { data } })` | 使用 sessionStorage 或查詢參數 | 頁面間傳遞數據   |
+| ❌                                       | `router.refresh()`             | 重新載入當前路由 |
+| ❌                                       | `router.prefetch("/path")`     | 預先載入路由     |
+
+### 快速轉換導航邏輯
+
+#### 步驟 1：更新導入語句
+
+```tsx
+// 從這個：
+import { useNavigate } from "react-router-dom";
+
+// 改成這個：
+import { useRouter } from "next/navigation";
+```
+
+#### 步驟 2：更新 hook 使用
+
+```tsx
+// 從這個：
+const navigate = useNavigate();
+
+// 改成這個：
+const router = useRouter();
+```
+
+#### 步驟 3：更新導航呼叫
+
+```tsx
+// 從這個：
+navigate("/some-path");
+navigate(-1);
+
+// 改成這個：
+router.push("/some-path");
+router.back();
+```
+
+#### 步驟 4：處理頁面間數據傳遞
+
+```tsx
+// 從這個：
+navigate("/path", { state: { someData: data } });
+
+// 改成這個（使用 sessionStorage）：
+sessionStorage.setItem("someData", JSON.stringify(data));
+router.push("/path");
+
+// 或者使用查詢參數：
+router.push(`/path?data=${encodeURIComponent(JSON.stringify(data))}`);
+```
 
 ### 3. 鏈接組件
 
 #### React Router (舊)
+
 ```tsx
 import { Link } from "react-router-dom";
 
-<Link to="/kyc-verification">Go to KYC</Link>
+<Link to="/kyc-verification">Go to KYC</Link>;
 ```
 
 #### Next.js App Router (新)
+
 ```tsx
 import Link from "next/link";
 
-<Link href="/kyc-verification">Go to KYC</Link>
+<Link href="/kyc-verification">Go to KYC</Link>;
 ```
 
 **注意：** Next.js 的 `Link` 是 `href` 而非 `to`
@@ -222,14 +289,15 @@ import Link from "next/link";
 ### 問題：Next.js App Router 沒有 `location.state`
 
 #### React Router (舊) ❌
+
 ```tsx
 // 傳送頁面
 navigate("/loan-confirm", {
   state: {
     asset: mockAsset,
     loanAmount: 5000000,
-    selectedTerm: 180
-  }
+    selectedTerm: 180,
+  },
 });
 
 // 接收頁面
@@ -253,12 +321,15 @@ export default function LoanSetup() {
 
   const handleContinue = () => {
     // 儲存數據到 sessionStorage
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('loanData', JSON.stringify({
-        asset: mockAsset,
-        loanAmount: 5000000,
-        selectedTerm: 180,
-      }));
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(
+        "loanData",
+        JSON.stringify({
+          asset: mockAsset,
+          loanAmount: 5000000,
+          selectedTerm: 180,
+        })
+      );
     }
     router.push("/loan-confirm");
   };
@@ -280,8 +351,8 @@ export default function LoanConfirm() {
 
   useEffect(() => {
     // 從 sessionStorage 讀取數據
-    if (typeof window !== 'undefined') {
-      const data = sessionStorage.getItem('loanData');
+    if (typeof window !== "undefined") {
+      const data = sessionStorage.getItem("loanData");
       if (data) {
         setLoanData(JSON.parse(data));
       } else {
@@ -310,8 +381,8 @@ router.push(`/loan-confirm?amount=${loanAmount}&term=${selectedTerm}`);
 // 接收
 import { useSearchParams } from "next/navigation";
 const searchParams = useSearchParams();
-const amount = searchParams.get('amount');
-const term = searchParams.get('term');
+const amount = searchParams.get("amount");
+const term = searchParams.get("term");
 ```
 
 **方案 3：使用 Context API（適用於全域狀態）**
@@ -339,12 +410,12 @@ export const useLoan = () => useContext(LoanContext);
 
 ### 狀態傳遞方式選擇指南
 
-| 使用場景 | 推薦方案 | 原因 |
-|---------|---------|------|
-| 多步驟表單流程 | sessionStorage | 數據在刷新後保留 |
-| 簡單的篩選、排序參數 | URL 查詢參數 | 可分享、可收藏 |
-| 跨多個頁面的全域狀態 | Context API | 避免重複傳遞 |
-| 大量複雜數據 | React Query / Zustand | 更好的狀態管理 |
+| 使用場景             | 推薦方案              | 原因             |
+| -------------------- | --------------------- | ---------------- |
+| 多步驟表單流程       | sessionStorage        | 數據在刷新後保留 |
+| 簡單的篩選、排序參數 | URL 查詢參數          | 可分享、可收藏   |
+| 跨多個頁面的全域狀態 | Context API           | 避免重複傳遞     |
+| 大量複雜數據         | React Query / Zustand | 更好的狀態管理   |
 
 ---
 
@@ -382,6 +453,7 @@ export default function RootLayout({
 ```
 
 **重點：**
+
 - `layout.tsx` 是伺服器組件，不能使用 hooks
 - 不能加 `"use client"`
 - `metadata` 只能在伺服器組件中使用
@@ -415,6 +487,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 ```
 
 **重點：**
+
 - 必須加 `"use client"`
 - 所有需要使用 React hooks 的 Provider 都放這裡
 - QueryClient 使用 `useState` 而非直接 `new`，避免每次渲染都建立新實例
@@ -561,7 +634,10 @@ export default function NotFound() {
   const pathname = usePathname();
 
   useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", pathname);
+    console.error(
+      "404 Error: User attempted to access non-existent route:",
+      pathname
+    );
   }, [pathname]);
 
   return (
@@ -585,6 +661,7 @@ npm run dev
 ```
 
 逐一測試：
+
 - [ ] 首頁載入正常
 - [ ] 所有連結可點擊
 - [ ] 導航功能正常
@@ -625,12 +702,14 @@ npm install  # 或 yarn install
 ### 1. "use client" 何時使用？
 
 **必須使用的情況：**
+
 - 使用 React hooks（useState, useEffect, useRouter 等）
 - 使用瀏覽器 API（window, localStorage 等）
 - 使用事件處理器（onClick, onChange 等）
 - 使用 Context Providers
 
 **不需使用的情況：**
+
 - 純展示組件
 - 使用 `metadata` 的頁面
 - 伺服器端數據獲取
@@ -640,12 +719,14 @@ npm install  # 或 yarn install
 #### 為什麼要使用 Next.js Image 組件？
 
 ✨ **自動優化**
+
 - 自動轉換為 WebP 格式（現代瀏覽器）
 - 自動生成不同尺寸的響應式圖片
 - 延遲載入（lazy loading）
 - 佔位符效果（可選）
 
 ⚡ **性能提升**
+
 - 只載入視窗內的圖片
 - 自動選擇最佳格式
 - 減少頁面載入時間
@@ -654,9 +735,10 @@ npm install  # 或 yarn install
 #### 基本轉換
 
 ##### React (舊) ❌
+
 ```tsx
 import logo from "@/assets/logo.png";
-<img src={logo} alt="logo" className="w-full h-full object-cover" />
+<img src={logo} alt="logo" className="w-full h-full object-cover" />;
 ```
 
 ##### Next.js (新) ✅
@@ -675,7 +757,7 @@ import logo from "@/assets/logo.png";
   width={200}
   height={100}
   className="object-cover"
-/>
+/>;
 ```
 
 **方案 2：使用 fill 屬性（推薦用於響應式容器）**
@@ -688,16 +770,12 @@ import logo from "@/assets/logo.png";
 
 // 容器必須是 relative 定位
 <div className="relative w-full h-64">
-  <Image
-    src={logo}
-    alt="logo"
-    fill
-    className="object-cover"
-  />
-</div>
+  <Image src={logo} alt="logo" fill className="object-cover" />
+</div>;
 ```
 
 **方案 3：繼續使用 <img> 標籤（僅在必要時）**
+
 ```tsx
 // 當圖片來源是外部 URL 或需要特殊處理時
 <img src={dynamicUrl} alt="logo" className="w-full h-full object-cover" />
@@ -706,15 +784,18 @@ import logo from "@/assets/logo.png";
 #### 關鍵變更點
 
 1. **Import 語句**
+
    ```tsx
    import Image from "next/image";
    ```
 
 2. **父容器加上 `relative`（使用 fill 時）**
+
    - 從：`<div className="w-24 h-24 overflow-hidden">`
    - 到：`<div className="w-24 h-24 overflow-hidden relative">`
 
 3. **使用 `fill` 屬性**
+
    - `fill` 會讓圖片自動填滿父容器
    - 類似 CSS 的 `position: absolute; inset: 0`
 
@@ -728,6 +809,7 @@ import logo from "@/assets/logo.png";
 ##### 資產卡片圖片
 
 **舊版（React Router + img）:**
+
 ```tsx
 <Card className="overflow-hidden">
   <div className="aspect-video relative overflow-hidden bg-muted">
@@ -741,24 +823,21 @@ import logo from "@/assets/logo.png";
 ```
 
 **新版（Next.js + Image）:**
+
 ```tsx
 import Image from "next/image";
 
 <Card className="overflow-hidden">
   <div className="aspect-video relative overflow-hidden bg-muted">
-    <Image
-      src={asset.image}
-      alt={asset.name}
-      fill
-      className="object-cover"
-    />
+    <Image src={asset.image} alt={asset.name} fill className="object-cover" />
   </div>
-</Card>
+</Card>;
 ```
 
 ##### 小縮圖
 
 **舊版:**
+
 ```tsx
 <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted">
   <img
@@ -770,6 +849,7 @@ import Image from "next/image";
 ```
 
 **新版:**
+
 ```tsx
 import Image from "next/image";
 
@@ -780,17 +860,19 @@ import Image from "next/image";
     fill
     className="object-cover"
   />
-</div>
+</div>;
 ```
 
 #### 重要規則與注意事項
 
 ⚠️ **必須設定尺寸**
+
 - 使用 `fill` 時，父容器必須有 `relative` 定位
 - 或者使用 `width` 和 `height` 屬性
 - 否則會出現錯誤
 
 ⚠️ **靜態導入 vs 動態路徑**
+
 ```tsx
 // ✅ 靜態導入（推薦）
 import img from '@/assets/photo.png';
@@ -811,36 +893,40 @@ import img from '@/assets/photo.png';
 // next.config.js
 module.exports = {
   images: {
-    domains: ['example.com', 'cdn.example.com'],
+    domains: ["example.com", "cdn.example.com"],
     // 或使用 remotePatterns（Next.js 14+）
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: '**.example.com',
+        protocol: "https",
+        hostname: "**.example.com",
       },
     ],
   },
-}
+};
 ```
 
 #### 快速轉換步驟
 
 1. **加入 import**
+
    ```tsx
    import Image from "next/image";
    ```
 
 2. **找到所有 `<img>` 標籤**
+
    ```bash
    # 使用 grep 搜尋
    grep -r "<img" src/app/
    ```
 
 3. **更新父容器**
+
    - 確保有固定尺寸（width/height）或 relative 定位
    - 加上 `relative` class
 
 4. **替換標籤**
+
    - `<img>` → `<Image>`
    - 加上 `fill` 屬性（響應式）或 `width`/`height`（固定尺寸）
    - 移除不必要的 `w-full h-full` class
@@ -858,6 +944,7 @@ module.exports = {
 ### 3. 環境變數
 
 #### React (舊)
+
 ```
 VITE_API_URL=https://api.example.com
 ```
@@ -867,6 +954,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
 ```
 
 #### Next.js (新)
+
 ```
 # .env.local
 NEXT_PUBLIC_API_URL=https://api.example.com
@@ -877,6 +965,7 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 ```
 
 **規則：**
+
 - 客戶端可訪問的變數必須加 `NEXT_PUBLIC_` 前綴
 - 伺服器端變數不需要前綴
 
@@ -884,16 +973,14 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 ```tsx
 // ❌ 錯誤
-const data = localStorage.getItem('key');
+const data = localStorage.getItem("key");
 
 // ✅ 正確
-const data = typeof window !== 'undefined'
-  ? localStorage.getItem('key')
-  : null;
+const data = typeof window !== "undefined" ? localStorage.getItem("key") : null;
 
 // ✅ 或在 useEffect 中使用
 useEffect(() => {
-  const data = localStorage.getItem('key');
+  const data = localStorage.getItem("key");
 }, []);
 ```
 
@@ -903,11 +990,11 @@ useEffect(() => {
 // app/page.tsx
 "use client";
 
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
 
-const HeavyComponent = dynamic(() => import('@/components/HeavyComponent'), {
+const HeavyComponent = dynamic(() => import("@/components/HeavyComponent"), {
   loading: () => <p>Loading...</p>,
-  ssr: false // 如果組件使用瀏覽器 API
+  ssr: false, // 如果組件使用瀏覽器 API
 });
 
 export default function Page() {
@@ -961,36 +1048,36 @@ export default function ClientPage() {
 
 ### 檔案對照
 
-| 功能 | React Router | Next.js App Router |
-|-----|-------------|-------------------|
-| 路由配置 | `App.tsx` | 檔案系統（`app/` 資料夾） |
-| 入口文件 | `main.tsx` | 自動處理 |
-| 根組件 | `App.tsx` | `app/layout.tsx` |
-| 首頁 | 在 `App.tsx` 配置 | `app/page.tsx` |
-| 404 頁面 | `<Route path="*">` | `app/not-found.tsx` |
-| 動態路由 | `:param` | `[param]/` |
+| 功能     | React Router       | Next.js App Router        |
+| -------- | ------------------ | ------------------------- |
+| 路由配置 | `App.tsx`          | 檔案系統（`app/` 資料夾） |
+| 入口文件 | `main.tsx`         | 自動處理                  |
+| 根組件   | `App.tsx`          | `app/layout.tsx`          |
+| 首頁     | 在 `App.tsx` 配置  | `app/page.tsx`            |
+| 404 頁面 | `<Route path="*">` | `app/not-found.tsx`       |
+| 動態路由 | `:param`           | `[param]/`                |
 
 ### Import 對照
 
-| 功能 | React Router | Next.js |
-|-----|-------------|---------|
-| 導航 hook | `import { useNavigate } from "react-router-dom"` | `import { useRouter } from "next/navigation"` |
-| 參數 hook | `import { useParams } from "react-router-dom"` | `import { useParams } from "next/navigation"` |
-| 位置 hook | `import { useLocation } from "react-router-dom"` | ❌ 改用 sessionStorage 或 URL params |
-| 連結組件 | `import { Link } from "react-router-dom"` | `import Link from "next/link"` |
-| 路徑 hook | ❌ | `import { usePathname } from "next/navigation"` |
-| 查詢參數 | `useSearchParams` (react-router v6.4+) | `import { useSearchParams } from "next/navigation"` |
+| 功能      | React Router                                     | Next.js                                             |
+| --------- | ------------------------------------------------ | --------------------------------------------------- |
+| 導航 hook | `import { useNavigate } from "react-router-dom"` | `import { useRouter } from "next/navigation"`       |
+| 參數 hook | `import { useParams } from "react-router-dom"`   | `import { useParams } from "next/navigation"`       |
+| 位置 hook | `import { useLocation } from "react-router-dom"` | ❌ 改用 sessionStorage 或 URL params                |
+| 連結組件  | `import { Link } from "react-router-dom"`        | `import Link from "next/link"`                      |
+| 路徑 hook | ❌                                               | `import { usePathname } from "next/navigation"`     |
+| 查詢參數  | `useSearchParams` (react-router v6.4+)           | `import { useSearchParams } from "next/navigation"` |
 
 ### API 方法對照
 
-| React Router | Next.js App Router | 用途 |
-|-------------|-------------------|------|
-| `navigate("/path")` | `router.push("/path")` | 導航到新頁面 |
-| `navigate("/path", { replace: true })` | `router.replace("/path")` | 取代當前頁面 |
-| `navigate(-1)` | `router.back()` | 返回上一頁 |
-| `navigate(1)` | `router.forward()` | 前往下一頁 |
-| ❌ | `router.refresh()` | 重新載入當前路由 |
-| ❌ | `router.prefetch("/path")` | 預先載入路由 |
+| React Router                           | Next.js App Router         | 用途             |
+| -------------------------------------- | -------------------------- | ---------------- |
+| `navigate("/path")`                    | `router.push("/path")`     | 導航到新頁面     |
+| `navigate("/path", { replace: true })` | `router.replace("/path")`  | 取代當前頁面     |
+| `navigate(-1)`                         | `router.back()`            | 返回上一頁       |
+| `navigate(1)`                          | `router.forward()`         | 前往下一頁       |
+| ❌                                     | `router.refresh()`         | 重新載入當前路由 |
+| ❌                                     | `router.prefetch("/path")` | 預先載入路由     |
 
 ---
 
@@ -1092,12 +1179,15 @@ export default function LoanSetup() {
 
   const handleContinue = () => {
     // 使用 sessionStorage 傳遞狀態
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('loanData', JSON.stringify({
-        assetId,
-        loanAmount,
-        selectedTerm: 180,
-      }));
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(
+        "loanData",
+        JSON.stringify({
+          assetId,
+          loanAmount,
+          selectedTerm: 180,
+        })
+      );
     }
     router.push("/loan-confirm");
   };
@@ -1131,8 +1221,8 @@ export default function LoanConfirm() {
 
   useEffect(() => {
     // 從 sessionStorage 讀取狀態
-    if (typeof window !== 'undefined') {
-      const data = sessionStorage.getItem('loanData');
+    if (typeof window !== "undefined") {
+      const data = sessionStorage.getItem("loanData");
       if (data) {
         setLoanData(JSON.parse(data));
       } else {
@@ -1172,6 +1262,7 @@ export default function LoanConfirm() {
 轉換完成後，使用此清單確認：
 
 ### 結構檢查
+
 - [ ] `src/app/layout.tsx` 已建立
 - [ ] `src/app/page.tsx` 已建立（首頁）
 - [ ] `src/app/providers.tsx` 已建立
@@ -1181,6 +1272,7 @@ export default function LoanConfirm() {
 - [ ] 動態路由使用 `[param]` 資料夾
 
 ### 代碼檢查
+
 - [ ] 所有使用 hooks 的頁面都有 `"use client"`
 - [ ] `react-router-dom` imports 已全部移除
 - [ ] `next/navigation` imports 已正確使用
@@ -1193,6 +1285,7 @@ export default function LoanConfirm() {
 - [ ] 使用 `fill` 屬性時，父容器加上 `relative` class
 
 ### 功能檢查
+
 - [ ] 所有頁面可以正常訪問
 - [ ] 頁面間導航正常
 - [ ] 動態路由參數正確傳遞
@@ -1201,6 +1294,7 @@ export default function LoanConfirm() {
 - [ ] 刷新頁面不會遺失必要數據
 
 ### 清理檢查
+
 - [ ] `src/App.tsx` 已刪除
 - [ ] `src/main.tsx` 已刪除
 - [ ] `package.json` 已移除 `react-router-dom`
@@ -1280,29 +1374,31 @@ app/
 
 ### A. Next.js App Router 資料夾命名規則
 
-| 命名 | 用途 | 範例 |
-|-----|------|------|
-| `page.tsx` | 路由頁面 | `app/about/page.tsx` → `/about` |
-| `layout.tsx` | 共享布局 | 包裹子路由 |
-| `loading.tsx` | 載入 UI | Suspense fallback |
-| `error.tsx` | 錯誤 UI | Error boundary |
-| `not-found.tsx` | 404 頁面 | 未匹配路由 |
-| `[folder]` | 動態路由 | `[id]` → `:id` |
-| `[...folder]` | Catch-all | `[...slug]` → `*` |
-| `[[...folder]]` | Optional catch-all | 包含父路由 |
-| `(folder)` | 路由群組 | 不影響 URL |
-| `@folder` | 平行路由 | 同時渲染多個頁面 |
-| `_folder` | 私有資料夾 | 不會成為路由 |
+| 命名            | 用途               | 範例                            |
+| --------------- | ------------------ | ------------------------------- |
+| `page.tsx`      | 路由頁面           | `app/about/page.tsx` → `/about` |
+| `layout.tsx`    | 共享布局           | 包裹子路由                      |
+| `loading.tsx`   | 載入 UI            | Suspense fallback               |
+| `error.tsx`     | 錯誤 UI            | Error boundary                  |
+| `not-found.tsx` | 404 頁面           | 未匹配路由                      |
+| `[folder]`      | 動態路由           | `[id]` → `:id`                  |
+| `[...folder]`   | Catch-all          | `[...slug]` → `*`               |
+| `[[...folder]]` | Optional catch-all | 包含父路由                      |
+| `(folder)`      | 路由群組           | 不影響 URL                      |
+| `@folder`       | 平行路由           | 同時渲染多個頁面                |
+| `_folder`       | 私有資料夾         | 不會成為路由                    |
 
 ### B. 除錯技巧
 
 1. **檢查 Next.js 版本**
+
    ```bash
    npm list next
    # 確保是 13.4+ 版本
    ```
 
 2. **清除快取**
+
    ```bash
    rm -rf .next
    npm run dev
@@ -1317,15 +1413,18 @@ app/
 ### C. 性能優化建議
 
 1. **盡量使用伺服器組件**
+
    - 減少客戶端 JavaScript
    - 更快的初始載入
 
 2. **使用動態導入**
+
    ```tsx
-   const HeavyComponent = dynamic(() => import('./HeavyComponent'));
+   const HeavyComponent = dynamic(() => import("./HeavyComponent"));
    ```
 
 3. **使用 `loading.tsx`**
+
    ```tsx
    // app/dashboard/loading.tsx
    export default function Loading() {

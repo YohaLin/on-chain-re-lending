@@ -15,14 +15,14 @@ const processingSteps = [
 
 export default function LoanProcessing() {
   const router = useRouter();
+  const [loanData, setLoanData] = useState<any>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [loanData, setLoanData] = useState<any>(null);
 
   useEffect(() => {
-    // Retrieve loan data from sessionStorage
-    if (typeof window !== 'undefined') {
-      const data = sessionStorage.getItem('loanData');
+    // 從 sessionStorage 讀取數據
+    if (typeof window !== "undefined") {
+      const data = sessionStorage.getItem("loanData");
       if (data) {
         setLoanData(JSON.parse(data));
       } else {

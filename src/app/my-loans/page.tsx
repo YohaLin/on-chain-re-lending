@@ -1,13 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Clock, DollarSign, Calendar } from "lucide-react";
 import realEstateImage from "@/assets/real-estate-building.png";
+import TabBar from "@/components/TabBar";
 
 // 模擬貸款記錄
 const mockLoans = [
@@ -46,18 +47,6 @@ export default function MyLoans() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => router.back()}>
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <h1 className="text-2xl font-bold">我的貸款</h1>
-          </div>
-        </div>
-      </header>
-
       {/* Content */}
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {mockLoans.length === 0 ? (
@@ -77,15 +66,12 @@ export default function MyLoans() {
               return (
                 <Card key={loan.id} className="overflow-hidden">
                   <CardHeader className="bg-muted/30">
-                    <div className="flex items-start justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        進行中的借貸
-                        <Badge variant={isUrgent ? "destructive" : "default"}>
-                          {loan.status === "active" ? "進行中" : "已完成"}
-                        </Badge>
-                      </CardTitle>
-                      <Button size="sm">提前還款</Button>
-                    </div>
+                    <CardTitle className="flex items-center gap-2">
+                      進行中的借貸
+                      <Badge variant={isUrgent ? "destructive" : "default"}>
+                        {loan.status === "active" ? "進行中" : "已完成"}
+                      </Badge>
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-6">
                     {/* 抵押資產 */}
@@ -166,7 +152,7 @@ export default function MyLoans() {
                     </div>
 
                     {/* 詳細資訊 */}
-                    <div className="bg-muted/30 rounded-lg p-4 space-y-2 text-sm">
+                    <div className="bg-muted/30 rounded-lg p-4 space-y-2 text-sm mb-4">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">實際到帳金額</span>
                         <span className="font-semibold">
@@ -186,6 +172,9 @@ export default function MyLoans() {
                         </span>
                       </div>
                     </div>
+
+                    {/* 提前還款按鈕 */}
+                    <Button size="lg" className="w-full">提前還款</Button>
                   </CardContent>
                 </Card>
               );
@@ -193,6 +182,8 @@ export default function MyLoans() {
           </div>
         )}
       </div>
+
+      <TabBar />
     </div>
   );
 }

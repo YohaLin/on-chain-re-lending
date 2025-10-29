@@ -12,9 +12,9 @@ export default function LoanSuccess() {
   const [loanData, setLoanData] = useState<any>(null);
 
   useEffect(() => {
-    // Retrieve loan data from sessionStorage
-    if (typeof window !== 'undefined') {
-      const data = sessionStorage.getItem('loanData');
+    // 從 sessionStorage 讀取數據
+    if (typeof window !== "undefined") {
+      const data = sessionStorage.getItem("loanData");
       if (data) {
         setLoanData(JSON.parse(data));
       } else {
@@ -118,11 +118,11 @@ export default function LoanSuccess() {
 
         {/* 操作按鈕 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Button variant="outline" size="lg" onClick={() => router.push("/my-loans")}>
+          <Button size="lg" onClick={() => router.push("/my-loans")}>
             <FileText className="w-4 h-4 mr-2" />
             查看我的貸款
           </Button>
-          <Button size="lg" onClick={() => router.push("/")}>
+          <Button variant="secondary" size="lg" onClick={() => router.push("/")}>
             <Home className="w-4 h-4 mr-2" />
             返回首頁
           </Button>

@@ -4,14 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AssetSubmission from "@/components/AssetSubmission";
 import AssetStatus from "@/components/AssetStatus";
-import CustodyProcess from "@/pages/CustodyProcess";
+import CustodyProcess from "@/components/CustodyProcess";
 import NFTPreview from "@/components/NFTPreview";
 import NFTSuccess from "@/components/NFTSuccess";
 import Stepper from "@/components/Stepper";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Copy, Wallet } from "lucide-react";
+import { Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import TabBar from "@/components/TabBar";
 
 export default function AssetTokenization() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -47,9 +47,9 @@ export default function AssetTokenization() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <header className="bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3">
+        <div className="w-full mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
             <Avatar className="w-10 h-10">
               <AvatarFallback className="bg-[#d4ff00] text-foreground text-sm font-semibold">
@@ -73,33 +73,14 @@ export default function AssetTokenization() {
                 </button>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => router.push("/my-loans")}
-                size="sm"
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                我的貸款
-              </Button>
-              <Button
-                onClick={() => router.push("/my-assets")}
-                size="sm"
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <Wallet className="w-4 h-4" />
-                我的資產
-              </Button>
-            </div>
           </div>
         </div>
       </header>
 
       <Stepper steps={steps} currentStep={getStepperProgress()} />
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-5xl mx-auto">
+      <main className="w-full mx-auto px-4 py-8 overflow-x-hidden">
+        <div className="max-w-5xl mx-auto w-full overflow-x-hidden">
           {currentStep === 0 && (
             <AssetSubmission onSubmitSuccess={() => handleStepChange(1)} />
           )}
@@ -116,12 +97,14 @@ export default function AssetTokenization() {
         </div>
       </main>
 
-      <footer className="border-t mt-20">
-        <div className="container mx-auto px-4 py-8 text-center text-sm text-muted-foreground">
+      <footer className="border-t mt-20 mb-20">
+        <div className="w-full mx-auto px-4 py-8 text-center text-sm text-muted-foreground">
           <p>© 2025 RWA 資產代幣化平台. All rights reserved.</p>
           <p className="mt-2">Powered by Web3 Technology</p>
         </div>
       </footer>
+
+      <TabBar />
     </div>
   );
 }
