@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Upload, CheckCircle2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 import jewelryRing from "@/assets/jewelry-ring.png";
 import realEstateBuilding from "@/assets/real-estate-building.png";
 import artPainting from "@/assets/art-painting.png";
@@ -138,11 +139,11 @@ export default function AssetSubmission({ onSubmitSuccess }: AssetSubmissionProp
 
               <div>
                 <Label htmlFor="asset-address">資產地址 *</Label>
-                <Input
+                <AddressAutocomplete
                   id="asset-address"
                   placeholder="請輸入資產地址"
                   value={assetAddress}
-                  onChange={(e) => setAssetAddress(e.target.value)}
+                  onChange={setAssetAddress}
                   className="mt-2"
                 />
               </div>
