@@ -1,6 +1,5 @@
 import { defaultWagmiConfig } from "@web3modal/wagmi/react/config";
 import { cookieStorage, createStorage } from "wagmi";
-import { mainnet, sepolia } from "wagmi/chains";
 import { createWeb3Modal } from "@web3modal/wagmi/react";
 import { defineChain } from "viem";
 
@@ -95,8 +94,8 @@ export const sapphireTestnet = defineChain({
   },
 });
 
-// 配置支持的鏈（包含 Sapphire）
-const chains = [mainnet, sepolia, sapphire, sapphireTestnet] as const;
+// 配置支持的鏈（僅 Sapphire - Oasis 鏈）
+const chains = [sapphire, sapphireTestnet] as const;
 
 // 創建 wagmi 配置
 export const config = defaultWagmiConfig({

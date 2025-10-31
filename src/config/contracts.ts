@@ -3,31 +3,31 @@ import type { ContractConfig, ChainConfig } from "@/types/contract";
 // 支援的區塊鏈網路
 export const supportedChains: ChainConfig[] = [
   {
-    id: 11155111, // Sepolia Testnet
-    name: "Sepolia",
-    rpcUrl: "https://rpc.sepolia.org",
-    blockExplorer: "https://sepolia.etherscan.io",
+    id: 23294, // Sapphire Mainnet
+    name: "Sapphire",
+    rpcUrl: "https://sapphire.oasis.io",
+    blockExplorer: "https://explorer.oasis.io/mainnet/sapphire",
   },
   {
-    id: 80001, // Mumbai Testnet (Polygon)
-    name: "Mumbai",
-    rpcUrl: "https://rpc-mumbai.maticvigil.com",
-    blockExplorer: "https://mumbai.polygonscan.com",
+    id: 23295, // Sapphire Testnet
+    name: "Sapphire Testnet",
+    rpcUrl: "https://testnet.sapphire.oasis.io",
+    blockExplorer: "https://explorer.oasis.io/testnet/sapphire",
   },
 ];
 
 // 智能合約地址配置
-// 當工程師給你合約地址後，在這裡填入
+// PropertyNFT 合約地址
 export const contracts: Record<number, ContractConfig> = {
-  // Sepolia
-  11155111: {
-    address: "0x0000000000000000000000000000000000000000", // 待填入
-    chainId: 11155111,
+  // Sapphire Mainnet
+  23294: {
+    address: "0x0000000000000000000000000000000000000000", // 待部署
+    chainId: 23294,
   },
-  // Mumbai
-  80001: {
-    address: "0x0000000000000000000000000000000000000000", // 待填入
-    chainId: 80001,
+  // Sapphire Testnet
+  23295: {
+    address: "0x077EA4EEB46Fdf1F406E108e52fd463764d73383", // 已部署
+    chainId: 23295,
   },
 };
 
