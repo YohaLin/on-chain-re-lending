@@ -1,17 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wallet, CheckCircle2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useWeb3Modal } from "@web3modal/wagmi/react";
+import { useAccount, useConnect } from "wagmi";
+import { injected } from "wagmi/connectors";
+import { walletConnect } from "@wagmi/connectors";
+// 確保 Web3Modal 配置被載入
+import "@/config/web3modal";
+import { projectId } from "@/config/web3modal";
 
 export default function WalletConnect() {
   const [connecting, setConnecting] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
   const router = useRouter();
   const { toast } = useToast();
+  const { open } = useWeb3Modal();
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect();
 
   const wallets = [
     {
@@ -21,36 +31,61 @@ export default function WalletConnect() {
       description: "最流行的以太坊錢包",
     },
     {
-      id: "walletconnect",
-      name: "WalletConnect",
-      icon: "🔗",
-      description: "連接多種移動錢包",
-    },
-    {
-      id: "coinbase",
-      name: "Coinbase Wallet",
-      icon: "💼",
-      description: "Coinbase 官方錢包",
+      id: "imtoken",
+      name: "ImToken",
+      icon: "💎",
+      description: "多鏈支持的數字資產錢包",
     },
   ];
 
-  const handleConnect = async (walletId: string) => {
-    setSelectedWallet(walletId);
-    setConnecting(true);
-
-    // 模擬連接過程
-    setTimeout(() => {
+  // 當錢包連接成功時自動跳轉
+  useEffect(() => {
+    if (isConnected && address) {
       setConnecting(false);
       toast({
         title: "錢包連接成功",
-        description: "您的錢包已成功連接",
+        description: `地址: ${address.slice(0, 6)}...${address.slice(-4)}`,
       });
 
       // 連接成功後跳轉到 KYC 頁面
       setTimeout(() => {
         router.push("/kyc-verification");
-      }, 1000);
-    }, 2000);
+      }, 1500);
+    }
+  }, [isConnected, address, router, toast]);
+
+  const handleConnect = async (walletId: string) => {
+    setSelectedWallet(walletId);
+    setConnecting(true);
+
+    try {
+      if (walletId === "metamask") {
+        // 檢查是否安裝 MetaMask
+        if (typeof window !== "undefined" && window.ethereum) {
+          // 直接連接 MetaMask 瀏覽器插件
+          connect({ connector: injected() });
+        } else {
+          setConnecting(false);
+          toast({
+            title: "未安裝 MetaMask",
+            description: "請先安裝 MetaMask 瀏覽器擴充套件",
+            variant: "destructive",
+          });
+        }
+      } else if (walletId === "imtoken") {
+        // ImToken 透過 Web3Modal 顯示 WalletConnect QR code
+        // Web3Modal 會自動顯示 WalletConnect 選項和 QR code
+        await open({ view: "Connect" });
+      }
+    } catch (error) {
+      console.error("連接失敗:", error);
+      setConnecting(false);
+      toast({
+        title: "連接失敗",
+        description: "請重試或選擇其他錢包",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

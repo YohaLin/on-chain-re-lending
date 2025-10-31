@@ -1,14 +1,21 @@
 "use client";
-
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
+import ContractTermsDialog from "@/components/ContractTermsDialog";
 import genieIcon from "@/assets/genie-icon.png";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Welcome() {
   const router = useRouter();
+  const [showContract, setShowContract] = useState(false);
 
   const handleConnectWallet = () => {
+    setShowContract(true);
+  };
+
+  const handleContractConfirm = () => {
+    setShowContract(false);
     router.push("/");
   };
 
@@ -42,6 +49,12 @@ export default function Welcome() {
           開始您的資產代幣化之旅
         </p>
       </div>
+
+      <ContractTermsDialog
+        open={showContract}
+        onOpenChange={setShowContract}
+        onConfirm={handleContractConfirm}
+      />
     </div>
   );
 }
