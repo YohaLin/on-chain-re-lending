@@ -2,32 +2,45 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Building2, 
-  Gem, 
-  ArrowRight, 
-  Phone, 
-  MapPin, 
+import {
+  Building2,
+  Gem,
+  ArrowRight,
+  Phone,
+  MapPin,
   Calendar,
   CheckCircle2,
   Clock,
   Truck,
-  FileCheck
+  FileCheck,
+  Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAccount, useSwitchChain, useChainId } from "wagmi";
+import { SAPPHIRE_CHAIN_ID } from "@/utils/propertyNFT";
 
 interface CustodyProcessProps {
-  onComplete: () => void;
+  onComplete: (result: { tokenId?: bigint; transactionHash?: string }) => void;
+  assetData?: {
+    name: string;
+    description: string;
+    address: string;
+    assetType: string;
+  };
 }
 
 type AssetType = "real-estate" | "valuables";
 type ProcessStage = "intro" | "method-selection" | "tracking" | "complete";
 
-const CustodyProcess = ({ onComplete }: CustodyProcessProps) => {
+const CustodyProcess = ({ onComplete, assetData }: CustodyProcessProps) => {
+  const { address } = useAccount(); // 獲取使用者錢包地址
+  const chainId = useChainId(); // 獲取當前連接的鏈 ID
+  const { switchChain } = useSwitchChain(); // 切換鏈的函數
   const [assetType] = useState<AssetType>("real-estate"); // 可根據實際資產動態設定
   const [stage, setStage] = useState<ProcessStage>("intro");
   const [selectedMethod, setSelectedMethod] = useState<"pickup" | "delivery" | null>(null);
   const [trackingStatus, setTrackingStatus] = useState("pending");
+  const [isMinting, setIsMinting] = useState(false);
   const { toast } = useToast();
 
   const handleStartProcess = () => {
@@ -273,6 +286,125 @@ const CustodyProcess = ({ onComplete }: CustodyProcessProps) => {
     );
   }
 
+  // 處理 NFT 鑄造
+  const handleMintNFT = async () => {
+    if (!address) {
+      toast({
+        title: "錢包地址錯誤",
+        description: "無法獲取您的錢包地址，請重新連接錢包",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsMinting(true);
+
+    try {
+      // 1. 檢查並切換到 Sapphire 鏈
+      console.log("當前鏈 ID:", chainId);
+      console.log("目標鏈 ID:", SAPPHIRE_CHAIN_ID);
+
+      if (chainId !== SAPPHIRE_CHAIN_ID) {
+        toast({
+          title: "需要切換網路",
+          description: `請切換到 Sapphire 鏈 (Chain ID: ${SAPPHIRE_CHAIN_ID})`,
+        });
+
+        try {
+          await switchChain({ chainId: SAPPHIRE_CHAIN_ID });
+
+          toast({
+            title: "網路切換成功",
+            description: "已連接到 Sapphire 鏈",
+          });
+
+          // 等待一下讓鏈切換完成
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        } catch (switchError: any) {
+          console.error("切換鏈失敗:", switchError);
+          // 如果切換失敗，顯示手動添加指引
+          throw new Error(
+            `無法自動切換到 Sapphire 鏈。\n\n` +
+            `請在錢包中手動添加 Sapphire 網路：\n` +
+            `• 網路名稱: Sapphire\n` +
+            `• RPC URL: https://sapphire.oasis.io\n` +
+            `• Chain ID: ${SAPPHIRE_CHAIN_ID}\n` +
+            `• 符號: ROSE\n` +
+            `• 區塊瀏覽器: https://explorer.oasis.io/mainnet/sapphire`
+          );
+        }
+      }
+
+      // 2. 動態導入 (避免 SSR 問題)
+      const { uploadMetadataToIPFS } = await import("@/utils/ipfs");
+      const { adminMintNFT } = await import("@/utils/propertyNFT");
+
+      // 3. 構建 NFT metadata
+      const metadata = {
+        name: assetData?.name || "Property Asset",
+        description: assetData?.description || "Tokenized real-world asset",
+        attributes: [
+          {
+            trait_type: "Asset Type",
+            value: assetData?.assetType || "Real Estate",
+          },
+          {
+            trait_type: "Location",
+            value: assetData?.address || "Unknown",
+          },
+        ],
+        properties: {
+          address: assetData?.address,
+          assetType: assetData?.assetType,
+          mintedAt: new Date().toISOString(),
+        },
+      };
+
+      // 4. 上傳 metadata 到 IPFS
+      toast({
+        title: "正在上傳資料到 IPFS",
+        description: "請稍候...",
+      });
+
+      const tokenURI = await uploadMetadataToIPFS(metadata);
+      console.log("IPFS URI:", tokenURI);
+
+      // 5. 鑄造 NFT
+      toast({
+        title: "正在鑄造 NFT",
+        description: "請在錢包中確認交易",
+      });
+
+      const result = await adminMintNFT({
+        to: address,
+        tokenURI,
+      });
+
+      if (result.success) {
+        toast({
+          title: "🎉 NFT 鑄造成功！",
+          description: `Token ID: ${result.tokenId?.toString() || "N/A"}`,
+        });
+
+        // 回傳結果給父組件
+        onComplete({
+          tokenId: result.tokenId,
+          transactionHash: result.transactionHash,
+        });
+      } else {
+        throw new Error(result.error || "鑄造失敗");
+      }
+    } catch (error: any) {
+      console.error("鑄造 NFT 錯誤:", error);
+      toast({
+        title: "鑄造失敗",
+        description: error.message || "請稍後再試",
+        variant: "destructive",
+      });
+      setIsMinting(false);
+    }
+  };
+
   // 託管完成
   if (stage === "complete") {
     return (
@@ -281,32 +413,76 @@ const CustodyProcess = ({ onComplete }: CustodyProcessProps) => {
           <CardHeader>
             <div className="flex items-center justify-center mb-4">
               <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center">
-                <CheckCircle2 className="w-12 h-12 text-green-500" />
+                {isMinting ? (
+                  <Loader2 className="w-12 h-12 text-primary animate-spin" />
+                ) : (
+                  <CheckCircle2 className="w-12 h-12 text-green-500" />
+                )}
               </div>
             </div>
-            <CardTitle className="text-3xl text-center">實體託管完成！</CardTitle>
+            <CardTitle className="text-3xl text-center">
+              {isMinting ? "正在鑄造 NFT..." : "實體託管完成！"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <p className="text-center text-lg text-muted-foreground">
-              恭喜您！您的資產已成功完成實體託管程序
-            </p>
+            {!isMinting && (
+              <>
+                <p className="text-center text-lg text-muted-foreground">
+                  恭喜您！您的資產已成功完成實體託管程序
+                </p>
 
-            <div className="bg-primary/5 border border-primary/20 p-6 rounded-lg space-y-3">
-              <p className="font-semibold text-lg">下一步：鑄造資產 NFT</p>
-              <p className="text-muted-foreground">
-                我們即將為您的資產鑄造獨一無二的數位憑證 (NFT)。
-                這個 NFT 將代表您對實體資產的所有權，並可在區塊鏈上進行交易與借貸。
-              </p>
-            </div>
+                <div className="bg-primary/5 border border-primary/20 p-6 rounded-lg space-y-3">
+                  <p className="font-semibold text-lg">下一步：鑄造資產 NFT</p>
+                  <p className="text-muted-foreground">
+                    我們即將為您的資產鑄造獨一無二的數位憑證 (NFT)。
+                    這個 NFT 將代表您對實體資產的所有權，並可在區塊鏈上進行交易與借貸。
+                  </p>
+                </div>
 
-            <Button 
-              onClick={onComplete}
-              size="lg"
-              className="w-full"
-            >
-              開始鑄造我的資產 NFT
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
+                {/* 顯示當前連接的鏈 */}
+                {chainId !== SAPPHIRE_CHAIN_ID && (
+                  <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                    <p className="text-sm font-medium text-yellow-900 mb-2">
+                      ⚠️ 需要切換網路
+                    </p>
+                    <p className="text-xs text-yellow-700">
+                      當前連接: Chain ID {chainId}
+                      <br />
+                      需要切換到: Sapphire (Chain ID {SAPPHIRE_CHAIN_ID})
+                      <br />
+                      點擊下方按鈕後，系統會自動請求切換網路
+                    </p>
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleMintNFT}
+                  size="lg"
+                  className="w-full"
+                  disabled={isMinting}
+                >
+                  開始鑄造我的資產 NFT
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </>
+            )}
+
+            {isMinting && (
+              <div className="space-y-4">
+                <div className="bg-primary/5 border border-primary/20 p-6 rounded-lg space-y-3">
+                  <p className="font-semibold text-center">處理中...</p>
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    <p>✅ 檢查網路連接</p>
+                    <p>⏳ 上傳資料到 IPFS</p>
+                    <p>⏳ 呼叫智能合約</p>
+                    <p>⏳ 等待交易確認</p>
+                  </div>
+                  <p className="text-xs text-center text-muted-foreground mt-4">
+                    請在錢包中確認交易，並請耐心等候...
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

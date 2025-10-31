@@ -1,21 +1,30 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Clock, 
-  CheckCircle2, 
-  FileCheck, 
-  Coins, 
+import {
+  Clock,
+  CheckCircle2,
+  FileCheck,
+  Coins,
   FileSignature,
   Loader2
 } from "lucide-react";
 import { useState } from "react";
+import { useAccount } from "wagmi";
 import ContractReviewDialog from "./ContractReviewDialog";
 import DigitalSignatureDialog from "./DigitalSignatureDialog";
 import { useToast } from "@/hooks/use-toast";
 
+interface AssetData {
+  name: string;
+  description: string;
+  address: string;
+  assetType: string;
+}
+
 interface AssetStatusProps {
   onViewNFT: () => void;
+  assetData: AssetData;
 }
 
 const statusSteps = [
@@ -57,7 +66,8 @@ const statusSteps = [
   },
 ];
 
-export default function AssetStatus({ onViewNFT }: AssetStatusProps) {
+export default function AssetStatus({ onViewNFT, assetData }: AssetStatusProps) {
+  const { address } = useAccount(); // 獲取 imToken 連接的地址
   const [showContractDialog, setShowContractDialog] = useState(false);
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const { toast } = useToast();
@@ -71,12 +81,22 @@ export default function AssetStatus({ onViewNFT }: AssetStatusProps) {
     setShowSignatureDialog(true);
   };
 
-  const handleSigningComplete = () => {
+  const handleSigningComplete = (result: { tokenId?: bigint; transactionHash?: string }) => {
     setShowSignatureDialog(false);
-    toast({
-      title: "簽約完成",
-      description: "接下來將進行實體託管流程",
-    });
+
+    // 顯示成功訊息
+    if (result.tokenId) {
+      toast({
+        title: "NFT 鑄造成功！",
+        description: `Token ID: ${result.tokenId.toString()} - 接下來將進行實體託管流程`,
+      });
+    } else {
+      toast({
+        title: "簽約完成",
+        description: "接下來將進行實體託管流程",
+      });
+    }
+
     // 進入託管流程
     onViewNFT();
   };
@@ -118,8 +138,8 @@ export default function AssetStatus({ onViewNFT }: AssetStatusProps) {
 
       <Card className="p-6">
         <div className="space-y-1 mb-6">
-          <h3 className="font-semibold text-lg">台北市信義區豪宅</h3>
-          <p className="text-sm text-muted-foreground">房地產 • 提交於 2025/10/25</p>
+          <h3 className="font-semibold text-lg">{assetData.name || "未命名資產"}</h3>
+          <p className="text-sm text-muted-foreground">{assetData.assetType || "未分類"} • 提交於 {new Date().toLocaleDateString('zh-TW')}</p>
         </div>
 
         <div className="space-y-4">
@@ -197,6 +217,8 @@ export default function AssetStatus({ onViewNFT }: AssetStatusProps) {
         open={showSignatureDialog}
         onOpenChange={setShowSignatureDialog}
         onConfirm={handleSigningComplete}
+        userAddress={address}
+        assetData={assetData}
       />
     </div>
   );

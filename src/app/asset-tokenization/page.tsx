@@ -13,8 +13,29 @@ import { Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import TabBar from "@/components/TabBar";
 
+// 資產資料介面
+interface AssetData {
+  name: string;
+  description: string;
+  address: string;
+  assetType: string;
+}
+
+// NFT 鑄造結果介面
+interface MintResult {
+  tokenId?: bigint;
+  transactionHash?: string;
+}
+
 export default function AssetTokenization() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [assetData, setAssetData] = useState<AssetData>({
+    name: "",
+    description: "",
+    address: "",
+    assetType: "",
+  });
+  const [mintResult, setMintResult] = useState<MintResult>({});
   const { toast } = useToast();
   const router = useRouter();
 
@@ -82,18 +103,41 @@ export default function AssetTokenization() {
       <main className="w-full mx-auto px-4 py-8 overflow-x-hidden">
         <div className="max-w-5xl mx-auto w-full overflow-x-hidden">
           {currentStep === 0 && (
-            <AssetSubmission onSubmitSuccess={() => handleStepChange(1)} />
+            <AssetSubmission
+              onSubmitSuccess={(data) => {
+                setAssetData(data);
+                handleStepChange(1);
+              }}
+            />
           )}
           {currentStep === 1 && (
-            <AssetStatus onViewNFT={() => handleStepChange(2)} />
+            <AssetStatus
+              onViewNFT={() => handleStepChange(2)}
+              assetData={assetData}
+            />
           )}
           {currentStep === 2 && (
-            <CustodyProcess onComplete={() => handleStepChange(3)} />
+            <CustodyProcess
+              onComplete={(result) => {
+                setMintResult(result);
+                handleStepChange(3);
+              }}
+              assetData={assetData}
+            />
           )}
           {currentStep === 3 && (
-            <NFTPreview onConfirm={() => handleStepChange(4)} />
+            <NFTPreview
+              onConfirm={() => handleStepChange(4)}
+              assetData={assetData}
+            />
           )}
-          {currentStep === 4 && <NFTSuccess />}
+          {currentStep === 4 && (
+            <NFTSuccess
+              tokenId={mintResult.tokenId}
+              transactionHash={mintResult.transactionHash}
+              assetData={assetData}
+            />
+          )}
         </div>
       </main>
 

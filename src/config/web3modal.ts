@@ -2,6 +2,7 @@ import { defaultWagmiConfig } from "@web3modal/wagmi/react/config";
 import { cookieStorage, createStorage } from "wagmi";
 import { mainnet, sepolia } from "wagmi/chains";
 import { createWeb3Modal } from "@web3modal/wagmi/react";
+import { defineChain } from "viem";
 
 // 從 https://cloud.walletconnect.com 獲取你的 Project ID
 export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "";
@@ -45,8 +46,57 @@ const metadata = {
   icons: [`${getUrl()}/logo.png`],
 };
 
-// 配置支持的鏈
-const chains = [mainnet, sepolia] as const;
+// 定義 Sapphire 鏈
+export const sapphire = defineChain({
+  id: 23294,
+  name: "Sapphire",
+  nativeCurrency: {
+    decimals: 18,
+    name: "ROSE",
+    symbol: "ROSE",
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://sapphire.oasis.io"],
+      webSocket: ["wss://sapphire.oasis.io/ws"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "Oasis Sapphire Explorer",
+      url: "https://explorer.oasis.io/mainnet/sapphire",
+    },
+  },
+  contracts: {
+    // 可以在這裡添加常用合約地址
+  },
+});
+
+// 定義 Sapphire 測試網（可選）
+export const sapphireTestnet = defineChain({
+  id: 23295,
+  name: "Sapphire Testnet",
+  nativeCurrency: {
+    decimals: 18,
+    name: "TEST",
+    symbol: "TEST",
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://testnet.sapphire.oasis.io"],
+      webSocket: ["wss://testnet.sapphire.oasis.io/ws"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "Oasis Sapphire Testnet Explorer",
+      url: "https://explorer.oasis.io/testnet/sapphire",
+    },
+  },
+});
+
+// 配置支持的鏈（包含 Sapphire）
+const chains = [mainnet, sepolia, sapphire, sapphireTestnet] as const;
 
 // 創建 wagmi 配置
 export const config = defaultWagmiConfig({
@@ -68,7 +118,7 @@ createWeb3Modal({
   projectId,
   enableAnalytics: false, // 開發時建議關閉
   themeMode: "light",
-  defaultChain: sepolia, // 開發建議用測試網
+  defaultChain: sapphireTestnet, // 預設使用 Sapphire 測試網
   // 移動端配置 - 優先顯示 imToken
   featuredWalletIds: [
     "ef333840daf915aafdc4a004525502d6d49d77bd9c65e0642dbaefb3c2893bef", // imToken

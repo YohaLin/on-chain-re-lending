@@ -15,13 +15,22 @@ import { useToast } from "@/hooks/use-toast";
 interface DigitalSignatureDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
+  onConfirm: (result: { tokenId?: bigint; transactionHash?: string }) => void;
+  userAddress: `0x${string}` | undefined; // 從 imToken 獲得的地址
+  assetData?: {
+    name: string;
+    description: string;
+    address: string;
+    assetType: string;
+  };
 }
 
 export default function DigitalSignatureDialog({
   open,
   onOpenChange,
   onConfirm,
+  userAddress,
+  assetData,
 }: DigitalSignatureDialogProps) {
   const [hasSigned, setHasSigned] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -128,12 +137,14 @@ export default function DigitalSignatureDialog({
       return;
     }
 
+    // 簽名完成,只需通知父組件
     toast({
-      title: "簽約成功",
-      description: "您的數位簽名已確認",
+      title: "✅ 簽名完成",
+      description: "您的數位簽名已記錄",
     });
-    
-    onConfirm();
+
+    // 回傳空結果給父組件(表示簽名完成)
+    onConfirm({});
   };
 
   return (

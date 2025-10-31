@@ -51,9 +51,9 @@ export default function KYCVerification() {
   const selfApp = address
     ? new SelfAppBuilder({
         version: 2,
-        appName: process.env.SELF_APP_NAME || "on-chain-re-lending",
+        appName: "on-chain-re-lending",
         scope: "kyc-verification",
-        endpoint: process.env.NEXT_PUBLIC_SELF_ENDPOINT || "",
+        endpoint: process.env.NEXT_PUBLIC_SELF_ENDPOINT || "https://interradially-ungraven-adria.ngrok-free.dev/api/kyc/self-verify",
         userId: address, // 使用錢包地址作為 userId
         userIdType: "hex", // 區塊鏈地址使用 hex 格式
         disclosures: {
@@ -80,9 +80,9 @@ export default function KYCVerification() {
     // 將 selfApp 配置編碼為 URL 參數
     const appConfig = {
       version: 2,
-      appName: process.env.SELF_APP_NAME || "on-chain-re-lending",
+      appName: "on-chain-re-lending",
       scope: "kyc-verification",
-      endpoint: process.env.NEXT_PUBLIC_SELF_ENDPOINT || "",
+      endpoint: process.env.NEXT_PUBLIC_SELF_ENDPOINT || "http://192.168.0.225:3000/api/kyc/self-verify",
       userId: address,
       userIdType: "hex",
       disclosures: {

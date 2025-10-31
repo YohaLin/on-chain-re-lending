@@ -16,8 +16,15 @@ import wineBottle from "@/assets/wine-bottle.png";
 
 type AssetType = "real-estate" | "art" | "jewelry" | "vehicle" | "other";
 
+interface AssetData {
+  name: string;
+  description: string;
+  address: string;
+  assetType: string;
+}
+
 interface AssetSubmissionProps {
-  onSubmitSuccess: () => void;
+  onSubmitSuccess: (data: AssetData) => void;
 }
 
 const assetTypes = [
@@ -81,13 +88,22 @@ export default function AssetSubmission({ onSubmitSuccess }: AssetSubmissionProp
       return;
     }
 
+    // 找到資產類型的中文名稱
+    const assetTypeName = assetTypes.find(type => type.id === selectedType)?.name || selectedType;
+
     toast({
       title: "資產提交成功！",
       description: "您的資產正在審核中，預計需要 1-3 個工作天",
     });
-    
+
     setTimeout(() => {
-      onSubmitSuccess();
+      // 將資產數據回傳給父組件
+      onSubmitSuccess({
+        name: assetName,
+        description: assetDescription,
+        address: assetAddress,
+        assetType: assetTypeName,
+      });
     }, 1500);
   };
 

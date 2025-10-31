@@ -4,12 +4,35 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Sparkles, ExternalLink, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { getSapphireExplorerUrl } from "@/utils/propertyNFT";
 
-export default function NFTSuccess() {
+interface AssetData {
+  name: string;
+  description: string;
+  address: string;
+  assetType: string;
+}
+
+interface NFTSuccessProps {
+  tokenId?: bigint;
+  transactionHash?: string;
+  assetData: AssetData;
+}
+
+export default function NFTSuccess({ tokenId, transactionHash, assetData }: NFTSuccessProps) {
   const router = useRouter();
 
+  // 格式化 Token ID 顯示
+  const displayTokenId = tokenId ? `#${tokenId.toString()}` : "#RWA-2025-001";
+
   const handleStartLoan = () => {
-    router.push("/loan-setup/RWA-2025-001");
+    router.push(`/loan-setup/${tokenId?.toString() || "RWA-2025-001"}`);
+  };
+
+  const handleViewOnExplorer = () => {
+    if (transactionHash) {
+      window.open(getSapphireExplorerUrl(transactionHash, "tx"), "_blank");
+    }
   };
 
   return (
@@ -34,7 +57,7 @@ export default function NFTSuccess() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">Token ID</p>
-              <p className="font-mono font-bold text-xl">#RWA-2025-001</p>
+              <p className="font-mono font-bold text-xl">{displayTokenId}</p>
             </div>
           </div>
         </div>
@@ -42,15 +65,15 @@ export default function NFTSuccess() {
         <div className="space-y-4">
           <div className="flex justify-between items-center py-3 border-t">
             <span className="text-muted-foreground">資產名稱</span>
-            <span className="font-semibold">台北市信義區豪宅</span>
+            <span className="font-semibold">{assetData.name || "未命名資產"}</span>
           </div>
           <div className="flex justify-between items-center py-3 border-t">
             <span className="text-muted-foreground">資產類型</span>
-            <span className="font-semibold">房地產</span>
+            <span className="font-semibold">{assetData.assetType || "未分類"}</span>
           </div>
           <div className="flex justify-between items-center py-3 border-t">
-            <span className="text-muted-foreground">估值</span>
-            <span className="font-bold text-primary text-lg">NT$ 6,400,000</span>
+            <span className="text-muted-foreground">描述</span>
+            <span className="font-semibold text-right max-w-xs truncate">{assetData.description || "無描述"}</span>
           </div>
           <div className="flex justify-between items-center py-3 border-t">
             <span className="text-muted-foreground">狀態</span>
@@ -61,7 +84,10 @@ export default function NFTSuccess() {
         </div>
       </Card>
 
-      <Card className="p-6 text-left hover:shadow-lg transition-shadow cursor-pointer group max-w-md mx-auto">
+      <Card
+        className="p-6 text-left hover:shadow-lg transition-shadow cursor-pointer group max-w-md mx-auto"
+        onClick={handleViewOnExplorer}
+      >
         <div className="flex items-start gap-4">
           <div className="p-3 bg-primary/10 rounded-lg">
             <ExternalLink className="w-6 h-6 text-primary" />
@@ -71,7 +97,9 @@ export default function NFTSuccess() {
               查看 NFT 詳情
             </h3>
             <p className="text-sm text-muted-foreground">
-              在區塊鏈瀏覽器上查看您的 NFT
+              {transactionHash
+                ? "在區塊鏈瀏覽器上查看您的 NFT"
+                : "交易哈希暫不可用"}
             </p>
           </div>
         </div>
@@ -81,7 +109,7 @@ export default function NFTSuccess() {
         <div className="space-y-4">
           <h3 className="font-semibold text-lg">下一步：開始借貸</h3>
           <p className="text-sm text-muted-foreground">
-            您現在可以使用這個 NFT 作為抵押品，在我們的平台上申請借款。根據您的資產估值，您最多可以借款 NT$ 4,480,000（LTV 70%）。
+            您現在可以使用這個 NFT 作為抵押品，在我們的平台上申請借款。
           </p>
           <Button className="w-full" size="lg" onClick={handleStartLoan}>
             開始借款

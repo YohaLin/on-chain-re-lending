@@ -7,8 +7,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   MapPin,
-  Ruler,
-  Calendar,
   FileText,
   ExternalLink,
   Copy,
@@ -16,40 +14,47 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAccount } from "wagmi";
 import ContractReviewDialog from "./ContractReviewDialog";
-import DigitalSignatureDialog from "./DigitalSignatureDialog";
 import buildingImage from "@/assets/building.png";
+import { PROPERTY_NFT_ADDRESS } from "@/utils/propertyNFT";
+
+interface AssetData {
+  name: string;
+  description: string;
+  address: string;
+  assetType: string;
+}
 
 interface NFTPreviewProps {
   onConfirm: () => void;
+  assetData: AssetData;
 }
 
-export default function NFTPreview({ onConfirm }: NFTPreviewProps) {
+export default function NFTPreview({ onConfirm, assetData }: NFTPreviewProps) {
   const router = useRouter();
+  const { address } = useAccount(); // 獲取 imToken 連接的地址
   const [copied, setCopied] = useState(false);
   const [showContractDialog, setShowContractDialog] = useState(false);
-  const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const { toast } = useToast();
 
   const handleContractConfirm = () => {
     setShowContractDialog(false);
-    setShowSignatureDialog(true);
-  };
-
-  const handleSigningComplete = () => {
-    setShowSignatureDialog(false);
+    // 不再打開簽名對話框,直接完成
+    toast({
+      title: "合約已確認",
+      description: "進入託管程序",
+    });
     onConfirm();
   };
 
   const nftData = {
-    tokenId: "#RWA-2025-001",
-    name: "台北市信義區豪宅",
-    assetType: "房地產",
-    estimatedValue: "NT$ 6,400,000",
-    location: "台北市信義區基隆路一段 200 號",
-    size: "120 坪",
-    completionDate: "2020 年 5 月",
-    contractHash: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+    tokenId: "#RWA-待鑄造",
+    name: assetData.name || "未命名資產",
+    assetType: assetData.assetType || "未分類",
+    location: assetData.address || "未提供地址",
+    description: assetData.description || "無描述",
+    contractHash: PROPERTY_NFT_ADDRESS,
   };
 
   const handleCopy = () => {
@@ -95,9 +100,9 @@ export default function NFTPreview({ onConfirm }: NFTPreviewProps) {
 
           <div className="pt-4 border-t">
             <div className="flex justify-between items-center gap-2">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">估值</span>
-              <span className="font-bold text-xl text-primary break-all text-right">
-                {nftData.estimatedValue}
+              <span className="text-sm text-muted-foreground whitespace-nowrap">描述</span>
+              <span className="font-medium text-sm break-all text-right max-w-xs">
+                {nftData.description}
               </span>
             </div>
           </div>
@@ -106,7 +111,7 @@ export default function NFTPreview({ onConfirm }: NFTPreviewProps) {
         <div className="space-y-4">
           <Card className="p-6 overflow-hidden">
             <h3 className="font-semibold text-lg mb-4">資產詳細資訊</h3>
-            
+
             <div className="space-y-4">
               <div className="flex gap-3">
                 <MapPin className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
@@ -117,18 +122,10 @@ export default function NFTPreview({ onConfirm }: NFTPreviewProps) {
               </div>
 
               <div className="flex gap-3">
-                <Ruler className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm text-muted-foreground">坪數</p>
-                  <p className="font-medium">{nftData.size}</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <Calendar className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm text-muted-foreground">完工日期</p>
-                  <p className="font-medium">{nftData.completionDate}</p>
+                <FileText className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-muted-foreground">資產類型</p>
+                  <p className="font-medium">{nftData.assetType}</p>
                 </div>
               </div>
             </div>
@@ -136,7 +133,7 @@ export default function NFTPreview({ onConfirm }: NFTPreviewProps) {
 
           <Card className="p-6 overflow-hidden">
             <h3 className="font-semibold text-lg mb-4">區塊鏈資訊</h3>
-            
+
             <div className="space-y-4">
               <div className="min-w-0 overflow-hidden">
                 <p className="text-sm text-muted-foreground mb-2">智能合約地址</p>
@@ -211,12 +208,6 @@ export default function NFTPreview({ onConfirm }: NFTPreviewProps) {
         open={showContractDialog}
         onOpenChange={setShowContractDialog}
         onConfirm={handleContractConfirm}
-      />
-
-      <DigitalSignatureDialog
-        open={showSignatureDialog}
-        onOpenChange={setShowSignatureDialog}
-        onConfirm={handleSigningComplete}
       />
     </div>
   );
