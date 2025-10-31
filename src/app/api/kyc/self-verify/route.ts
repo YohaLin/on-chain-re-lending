@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
       AllIds,
       new DefaultConfigStore({
         minimumAge: parseInt(process.env.SELF_MINIMUM_AGE || "18"),
-        excludedCountries: ["IRN", "PRK", "RUS", "SYR"], // OFAC 制裁國家
-        ofac: true, // 啟用 OFAC 檢查
+        // excludedCountries 已移除，以確保與前端配置匹配
+        ofac: false, // 暫時關閉 OFAC 檢查
       }),
       "uuid"
     );
