@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     const { SelfBackendVerifier, AllIds, DefaultConfigStore } = await import("@selfxyz/core");
 
     const verifier = new SelfBackendVerifier(
-      process.env.SELF_APP_NAME || "on-chain-re-lending",
+      "kyc-verification", // 必須與前端的 scope 參數完全一致
       process.env.NEXT_PUBLIC_SELF_ENDPOINT || "http://192.168.0.225:3000/api/kyc/self-verify",
       false, // 開發環境設為 false，生產環境設為 true
       AllIds,
