@@ -3,7 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Wallet, CheckCircle2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
@@ -11,11 +17,17 @@ import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 // 確保 Web3Modal 配置被載入
 import "@/config/web3modal";
+import {
+  openImToken as openImTokenHelper,
+  isMobile as isMobileHelper,
+} from "@/config/web3modal";
 
 // 檢測是否為移動端
 const isMobile = () => {
   if (typeof window === "undefined") return false;
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
 };
 
 export default function WalletConnect() {
@@ -113,8 +125,18 @@ export default function WalletConnect() {
           localStorage.setItem("wallet_type", "imtoken");
         }
 
+        // Minimal improvement: on mobile, attempt to open imToken via its scheme
+        // before opening Web3Modal. This is best-effort and helps some devices
+        // directly jump into the imToken app for pairing.
+        if (isMobileHelper()) {
+          try {
+            openImTokenHelper();
+          } catch (e) {
+            // ignore
+          }
+        }
+
         // ImToken 透過 Web3Modal 顯示 WalletConnect
-        // 在移動端會自動打開 imToken 應用
         await open({ view: "Connect" });
 
         // 移動端：設置一個監聽器，當頁面重新獲得焦點時檢查連接狀態
@@ -126,7 +148,10 @@ export default function WalletConnect() {
                 if (isConnected) {
                   clearInterval(checkConnection);
                   localStorage.removeItem("wallet_connecting");
-                  document.removeEventListener("visibilitychange", handleVisibilityChange);
+                  document.removeEventListener(
+                    "visibilitychange",
+                    handleVisibilityChange
+                  );
                 }
               }, 500);
 
@@ -134,7 +159,10 @@ export default function WalletConnect() {
               setTimeout(() => {
                 clearInterval(checkConnection);
                 localStorage.removeItem("wallet_connecting");
-                document.removeEventListener("visibilitychange", handleVisibilityChange);
+                document.removeEventListener(
+                  "visibilitychange",
+                  handleVisibilityChange
+                );
               }, 30000);
             }
           };
@@ -168,74 +196,76 @@ export default function WalletConnect() {
 
       <div className="flex items-center justify-center p-4 min-h-[calc(100vh-73px)]">
         <Card className="w-full max-w-2xl">
-        <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-            <Wallet className="w-8 h-8 text-primary" />
-          </div>
-          <CardTitle className="text-3xl">連接錢包</CardTitle>
-          <CardDescription className="text-base">
-            請選擇您的數位錢包以開始資產代幣化流程
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4">
-            {wallets.map((wallet) => (
-              <Card
-                key={wallet.id}
-                className={`cursor-pointer transition-all hover:border-primary ${
-                  selectedWallet === wallet.id ? "border-primary bg-primary/5" : ""
-                }`}
-                onClick={() => !connecting && handleConnect(wallet.id)}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="text-4xl">{wallet.icon}</div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{wallet.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {wallet.description}
-                      </p>
+          <CardHeader className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+              <Wallet className="w-8 h-8 text-primary" />
+            </div>
+            <CardTitle className="text-3xl">連接錢包</CardTitle>
+            <CardDescription className="text-base">
+              請選擇您的數位錢包以開始資產代幣化流程
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4">
+              {wallets.map((wallet) => (
+                <Card
+                  key={wallet.id}
+                  className={`cursor-pointer transition-all hover:border-primary ${
+                    selectedWallet === wallet.id
+                      ? "border-primary bg-primary/5"
+                      : ""
+                  }`}
+                  onClick={() => !connecting && handleConnect(wallet.id)}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="text-4xl">{wallet.icon}</div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg">{wallet.name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {wallet.description}
+                        </p>
+                      </div>
+                      {connecting && selectedWallet === wallet.id ? (
+                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                      ) : selectedWallet === wallet.id ? (
+                        <CheckCircle2 className="w-6 h-6 text-primary" />
+                      ) : (
+                        <div className="w-6 h-6" />
+                      )}
                     </div>
-                    {connecting && selectedWallet === wallet.id ? (
-                      <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                    ) : selectedWallet === wallet.id ? (
-                      <CheckCircle2 className="w-6 h-6 text-primary" />
-                    ) : (
-                      <div className="w-6 h-6" />
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
 
-          <div className="mt-8 p-4 bg-muted rounded-lg">
-            <h4 className="font-semibold mb-2 flex items-center gap-2">
-              <span>🔒</span>
-              安全提示
-            </h4>
-            <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• 我們不會儲存您的私鑰或助記詞</li>
-              <li>• 連接錢包是安全且可隨時中斷的</li>
-              <li>• 請確保您使用的是官方錢包應用</li>
-            </ul>
-          </div>
-
-          {isMobile() && (
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="font-semibold mb-2 flex items-center gap-2 text-blue-900">
-                <span>📱</span>
-                移動端使用提示
+            <div className="mt-8 p-4 bg-muted rounded-lg">
+              <h4 className="font-semibold mb-2 flex items-center gap-2">
+                <span>🔒</span>
+                安全提示
               </h4>
-              <ul className="text-sm text-blue-700 space-y-1">
-                <li>• 點擊 ImToken 後會跳轉到錢包應用</li>
-                <li>• 在錢包中確認連接後，請手動返回此頁面</li>
-                <li>• 返回後系統會自動檢測連接狀態</li>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• 我們不會儲存您的私鑰或助記詞</li>
+                <li>• 連接錢包是安全且可隨時中斷的</li>
+                <li>• 請確保您使用的是官方錢包應用</li>
               </ul>
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            {isMobile() && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-semibold mb-2 flex items-center gap-2 text-blue-900">
+                  <span>📱</span>
+                  移動端使用提示
+                </h4>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>• 點擊 ImToken 後會跳轉到錢包應用</li>
+                  <li>• 在錢包中確認連接後，請手動返回此頁面</li>
+                  <li>• 返回後系統會自動檢測連接狀態</li>
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
