@@ -64,16 +64,10 @@ export default function WalletConnect() {
 
   const wallets = [
     {
-      id: "metamask",
-      name: "MetaMask",
-      icon: "🦊",
-      description: "最流行的以太坊錢包",
-    },
-    {
-      id: "imtoken",
-      name: "ImToken",
-      icon: "💎",
-      description: "多鏈支持的數字資產錢包",
+      id: "walletconnect",
+      name: "WalletConnect",
+      icon: "🔗",
+      description: "支援多種移動端和桌面錢包",
     },
   ];
 
@@ -105,38 +99,14 @@ export default function WalletConnect() {
     setConnecting(true);
 
     try {
-      if (walletId === "metamask") {
-        // 檢查是否安裝 MetaMask
-        if (typeof window !== "undefined" && window.ethereum) {
-          // 直接連接 MetaMask 瀏覽器插件
-          connect({ connector: injected() });
-        } else {
-          setConnecting(false);
-          toast({
-            title: "未安裝 MetaMask",
-            description: "請先安裝 MetaMask 瀏覽器擴充套件",
-            variant: "destructive",
-          });
-        }
-      } else if (walletId === "imtoken") {
+      if (walletId === "walletconnect") {
         // 在移動端標記正在連接，以便返回時檢測
         if (isMobile() && typeof window !== "undefined") {
           localStorage.setItem("wallet_connecting", "true");
-          localStorage.setItem("wallet_type", "imtoken");
+          localStorage.setItem("wallet_type", "walletconnect");
         }
 
-        // Minimal improvement: on mobile, attempt to open imToken via its scheme
-        // before opening Web3Modal. This is best-effort and helps some devices
-        // directly jump into the imToken app for pairing.
-        if (isMobileHelper()) {
-          try {
-            openImTokenHelper();
-          } catch (e) {
-            // ignore
-          }
-        }
-
-        // ImToken 透過 Web3Modal 顯示 WalletConnect
+        // 打開 Web3Modal 顯示 WalletConnect
         await open({ view: "Connect" });
 
         // 移動端：設置一個監聽器，當頁面重新獲得焦點時檢查連接狀態
@@ -177,7 +147,7 @@ export default function WalletConnect() {
       }
       toast({
         title: "連接失敗",
-        description: "請重試或選擇其他錢包",
+        description: "請重試",
         variant: "destructive",
       });
     }
@@ -258,7 +228,7 @@ export default function WalletConnect() {
                   移動端使用提示
                 </h4>
                 <ul className="text-sm text-blue-700 space-y-1">
-                  <li>• 點擊 ImToken 後會跳轉到錢包應用</li>
+                  <li>• 點擊 WalletConnect 後會顯示 QR code 或跳轉到錢包應用</li>
                   <li>• 在錢包中確認連接後，請手動返回此頁面</li>
                   <li>• 返回後系統會自動檢測連接狀態</li>
                 </ul>

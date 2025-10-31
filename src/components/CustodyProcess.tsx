@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAccount, useSwitchChain, useChainId } from "wagmi";
+import { useWeb3Modal } from "@web3modal/wagmi/react";
 import { SAPPHIRE_CHAIN_ID } from "@/utils/propertyNFT";
 
 interface CustodyProcessProps {
@@ -33,9 +34,10 @@ type AssetType = "real-estate" | "valuables";
 type ProcessStage = "intro" | "method-selection" | "tracking" | "complete";
 
 const CustodyProcess = ({ onComplete, assetData }: CustodyProcessProps) => {
-  const { address } = useAccount(); // 獲取使用者錢包地址
+  const { address, isConnected } = useAccount(); // 獲取使用者錢包地址和連接狀態
   const chainId = useChainId(); // 獲取當前連接的鏈 ID
   const { switchChain } = useSwitchChain(); // 切換鏈的函數
+  const { open } = useWeb3Modal(); // 打開 Web3Modal
   const [assetType] = useState<AssetType>("real-estate"); // 可根據實際資產動態設定
   const [stage, setStage] = useState<ProcessStage>("intro");
   const [selectedMethod, setSelectedMethod] = useState<"pickup" | "delivery" | null>(null);
@@ -288,13 +290,33 @@ const CustodyProcess = ({ onComplete, assetData }: CustodyProcessProps) => {
 
   // 處理 NFT 鑄造
   const handleMintNFT = async () => {
-    if (!address) {
+    // 檢查錢包是否已連接
+    if (!isConnected || !address) {
       toast({
-        title: "錢包地址錯誤",
-        description: "無法獲取您的錢包地址，請重新連接錢包",
-        variant: "destructive",
+        title: "需要連接錢包",
+        description: "請先連接您的錢包以繼續鑄造 NFT",
       });
-      return;
+
+      // 打開 WalletConnect 對話框
+      try {
+        await open({ view: "Connect" });
+
+        // 等待用戶連接錢包
+        toast({
+          title: "請在錢包中確認連接",
+          description: "連接成功後將自動繼續鑄造流程",
+        });
+
+        return; // 等待用戶連接，不繼續執行
+      } catch (error) {
+        console.error("打開錢包連接失敗:", error);
+        toast({
+          title: "無法打開錢包連接",
+          description: "請重試",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setIsMinting(true);
