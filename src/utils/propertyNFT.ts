@@ -9,7 +9,7 @@ import PropertyNFTABI from "@/abi/PropertyNFT_Sapphire.json";
 
 // PropertyNFT 合約地址 (Sapphire 鏈)
 export const PROPERTY_NFT_ADDRESS =
-  "0x077EA4EEB46Fdf1F406E108e52fd463764d73383" as `0x${string}`;
+  "0xc65c0A63A5D46161799b92283801Df0b0a9C0a2c" as `0x${string}`;
 
 // Sapphire 鏈 ID
 export const SAPPHIRE_CHAIN_ID = 23295; // Sapphire Testnet

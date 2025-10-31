@@ -21,6 +21,15 @@ interface AssetData {
   description: string;
   address: string;
   assetType: string;
+  estimatedValue?: number;
+  valuationData?: {
+    matchCount: number;
+    priceRange: {
+      min: number;
+      max: number;
+    };
+    recentTransactions: any[];
+  };
 }
 
 interface AssetSubmissionProps {
@@ -38,9 +47,9 @@ const assetTypes = [
 export default function AssetSubmission({ onSubmitSuccess }: AssetSubmissionProps) {
   const [selectedType, setSelectedType] = useState<AssetType | null>(null);
   const [showDetails, setShowDetails] = useState(false);
-  const [assetName, setAssetName] = useState("");
-  const [assetDescription, setAssetDescription] = useState("");
-  const [assetAddress, setAssetAddress] = useState("");
+  const [assetName, setAssetName] = useState("大豪宅");
+  const [assetDescription, setAssetDescription] = useState("每天都想躺在泳池裡曬太陽的豪宅");
+  const [assetAddress, setAssetAddress] = useState("新北市新莊區福壽街１６９巷３４號七樓");
   const [files, setFiles] = useState<File[]>([]);
   const { toast } = useToast();
 
@@ -78,7 +87,7 @@ export default function AssetSubmission({ onSubmitSuccess }: AssetSubmissionProp
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedType || !assetName || !assetDescription || !assetAddress || files.length === 0) {
       toast({
         title: "請填寫所有必填欄位",
@@ -91,10 +100,64 @@ export default function AssetSubmission({ onSubmitSuccess }: AssetSubmissionProp
     // 找到資產類型的中文名稱
     const assetTypeName = assetTypes.find(type => type.id === selectedType)?.name || selectedType;
 
-    toast({
-      title: "資產提交成功！",
-      description: "您的資產正在審核中，預計需要 1-3 個工作天",
-    });
+    // 如果是房地產類型，查詢實價登錄資料
+    let estimatedValue: number | undefined;
+    let valuationData: any = undefined;
+
+    if (selectedType === "real-estate") {
+      try {
+        toast({
+          title: "正在查詢不動產資料...",
+          description: "請稍候，正在從新北市政府實價登錄系統查詢資料",
+        });
+
+        const response = await fetch(
+          `/api/property-valuation?address=${encodeURIComponent(assetAddress)}`
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            estimatedValue = result.data.estimatedValue;
+            valuationData = {
+              matchCount: result.data.matchCount,
+              priceRange: result.data.priceRange,
+              recentTransactions: result.data.recentTransactions,
+            };
+
+            toast({
+              title: "資產提交成功！",
+              description: `找到 ${result.data.matchCount} 筆相關交易資料，預估價值: NT$ ${estimatedValue?.toLocaleString()}`,
+            });
+          } else {
+            // 無法找到匹配資料，但仍允許提交
+            toast({
+              title: "資產提交成功！",
+              description: "未找到相關實價登錄資料，將由專業團隊進行人工估值",
+            });
+          }
+        } else {
+          // API 錯誤，但仍允許提交
+          toast({
+            title: "資產提交成功！",
+            description: "實價登錄查詢失敗，將由專業團隊進行人工估值",
+          });
+        }
+      } catch (error) {
+        console.error("Property valuation error:", error);
+        // 錯誤發生，但仍允許提交
+        toast({
+          title: "資產提交成功！",
+          description: "實價登錄查詢發生錯誤，將由專業團隊進行人工估值",
+        });
+      }
+    } else {
+      // 非房地產類型，直接提交
+      toast({
+        title: "資產提交成功！",
+        description: "您的資產正在審核中，預計需要 1-3 個工作天",
+      });
+    }
 
     setTimeout(() => {
       // 將資產數據回傳給父組件
@@ -103,6 +166,8 @@ export default function AssetSubmission({ onSubmitSuccess }: AssetSubmissionProp
         description: assetDescription,
         address: assetAddress,
         assetType: assetTypeName,
+        estimatedValue,
+        valuationData,
       });
     }, 1500);
   };

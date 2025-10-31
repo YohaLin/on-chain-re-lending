@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,23 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Info } from "lucide-react";
 import realEstateImage from "@/assets/real-estate-building.png";
 
-// 模擬資產數據
+// 估值資料介面
+interface ValuationData {
+  estimatedValue: number;
+  valuationData?: {
+    matchCount: number;
+    priceRange: {
+      min: number;
+      max: number;
+    };
+    recentTransactions: any[];
+  };
+  assetName: string;
+  assetType: string;
+  assetAddress: string;
+}
+
+// 模擬資產數據（作為預設值）
 const mockAsset = {
   id: "nft-001",
   name: "台北市中正區豪宅",
@@ -37,10 +53,31 @@ export default function LoanSetup() {
   const params = useParams();
   const assetId = params?.assetId as string;
 
+  // 從 sessionStorage 讀取估值資料
+  const [valuationData, setValuationData] = useState<ValuationData | null>(null);
   const [loanAmount, setLoanAmount] = useState(5000000);
   const [selectedTerm, setSelectedTerm] = useState(180);
 
-  const maxLoanAmount = mockAsset.valuation * mockAsset.maxLTV;
+  // 在組件載入時讀取估值資料
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedData = sessionStorage.getItem("assetValuation");
+      if (storedData) {
+        const data: ValuationData = JSON.parse(storedData);
+        setValuationData(data);
+        // 更新初始借款金額為估值的 50%
+        const initialLoan = Math.min(data.estimatedValue * 0.5, data.estimatedValue * 0.6);
+        setLoanAmount(Math.round(initialLoan / 100000) * 100000); // 四捨五入到最近的 100,000
+      }
+    }
+  }, []);
+
+  // 使用實際估值或預設值
+  const assetValuation = valuationData?.estimatedValue || mockAsset.valuation;
+  const assetName = valuationData?.assetName || mockAsset.name;
+  const assetType = valuationData?.assetType || mockAsset.type;
+
+  const maxLoanAmount = assetValuation * mockAsset.maxLTV;
 
   // 計算利息和實際到帳金額
   const calculateInterest = (principal: number, days: number) => {
@@ -56,11 +93,17 @@ export default function LoanSetup() {
       sessionStorage.setItem(
         "loanData",
         JSON.stringify({
-          asset: mockAsset,
+          asset: {
+            ...mockAsset,
+            name: assetName,
+            type: assetType,
+            valuation: assetValuation,
+          },
           loanAmount,
           selectedTerm,
           interest,
           actualAmount,
+          valuationData: valuationData?.valuationData, // 保留詳細估值資料
         })
       );
     }
@@ -97,20 +140,30 @@ export default function LoanSetup() {
               </div>
               <div>
                 <div className="mb-2">
-                  <h3 className="font-semibold text-lg mb-2">{mockAsset.name}</h3>
-                  <Badge>{mockAsset.type}</Badge>
+                  <h3 className="font-semibold text-lg mb-2">
+                    {assetName}
+                  </h3>
+                  <Badge>{assetType}</Badge>
                 </div>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">資產估值</span>
                     <span className="font-semibold">
-                      ${mockAsset.valuation.toLocaleString()}
+                      NT$ {assetValuation.toLocaleString()}
                     </span>
                   </div>
+                  {valuationData?.valuationData && (
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>估值來源</span>
+                      <span>
+                        基於 {valuationData.valuationData.matchCount} 筆實價登錄資料
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">最高可貸額度</span>
                     <span className="font-semibold text-primary">
-                      ${maxLoanAmount.toLocaleString()} (60%)
+                      NT$ {maxLoanAmount.toLocaleString()} (60%)
                     </span>
                   </div>
                 </div>
@@ -130,23 +183,23 @@ export default function LoanSetup() {
           <CardContent className="space-y-4">
             <div className="text-center py-4">
               <div className="text-4xl font-bold text-primary">
-                ${loanAmount.toLocaleString()}
+                NT$ {loanAmount.toLocaleString()}
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                最高可借 ${maxLoanAmount.toLocaleString()}
+                最高可借 NT$ {maxLoanAmount.toLocaleString()}
               </p>
             </div>
             <Slider
               value={[loanAmount]}
-              onValueChange={(value) => setLoanAmount(value[0])}
+              onValueChange={(value: any) => setLoanAmount(value[0])}
               min={100000}
-              max={maxLoanAmount}
+              max={Math.min(maxLoanAmount, assetValuation)} // 不能超過估值
               step={100000}
               className="py-4"
             />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>$100,000</span>
-              <span>${maxLoanAmount.toLocaleString()}</span>
+              <span>NT$ 100,000</span>
+              <span>NT$ {Math.min(maxLoanAmount, assetValuation).toLocaleString()}</span>
             </div>
           </CardContent>
         </Card>
@@ -181,7 +234,7 @@ export default function LoanSetup() {
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-muted-foreground">借款總額</span>
               <span className="text-xl font-bold">
-                ${loanAmount.toLocaleString()}
+                NT$ {loanAmount.toLocaleString()}
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b">
@@ -189,7 +242,7 @@ export default function LoanSetup() {
                 預扣總利息 ({(ANNUAL_RATE * 100).toFixed(1)}% 年利率)
               </span>
               <span className="text-xl font-semibold text-destructive">
-                -${interest.toLocaleString()}
+                -NT$ {interest.toLocaleString()}
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b">
@@ -199,7 +252,7 @@ export default function LoanSetup() {
             <div className="flex justify-between items-center py-3 bg-primary/10 rounded-lg px-4 mt-4">
               <span className="font-semibold">實際到帳金額</span>
               <span className="text-2xl font-bold text-primary">
-                ${actualAmount.toLocaleString()}
+                NT$ {actualAmount.toLocaleString()}
               </span>
             </div>
           </CardContent>
@@ -207,7 +260,11 @@ export default function LoanSetup() {
 
         {/* 操作按鈕 */}
         <div className="flex gap-4 mt-8">
-          <Button variant="outline" className="flex-1" onClick={() => router.back()}>
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={() => router.back()}
+          >
             返回
           </Button>
           <Button className="flex-1" size="lg" onClick={handleContinue}>

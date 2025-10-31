@@ -20,6 +20,15 @@ interface AssetData {
   description: string;
   address: string;
   assetType: string;
+  estimatedValue?: number;
+  valuationData?: {
+    matchCount: number;
+    priceRange: {
+      min: number;
+      max: number;
+    };
+    recentTransactions: any[];
+  };
 }
 
 interface AssetStatusProps {
@@ -27,46 +36,59 @@ interface AssetStatusProps {
   assetData: AssetData;
 }
 
-const statusSteps = [
-  { 
-    id: 1, 
-    name: "資產提交", 
-    icon: FileCheck, 
-    status: "completed" as const,
-    description: "已成功提交資產資訊"
-  },
-  { 
-    id: 2, 
-    name: "初步審核", 
-    icon: Clock, 
-    status: "completed" as const,
-    description: "平台已通過初步審核"
-  },
-  { 
-    id: 3, 
-    name: "專業估值", 
-    icon: Coins, 
-    status: "in-progress" as const,
-    description: "專業團隊正在進行估值",
-    estimatedValue: "NT$ 6,400,000"
-  },
-  { 
-    id: 4, 
-    name: "簽訂合約", 
-    icon: FileSignature, 
-    status: "pending" as const,
-    description: "等待估值完成後進行"
-  },
-  { 
-    id: 5, 
-    name: "NFT 鑄造", 
-    icon: Loader2, 
-    status: "pending" as const,
-    description: "等待合約簽訂後開始"
-  },
-];
-
 export default function AssetStatus({ onViewNFT, assetData }: AssetStatusProps) {
+  // 格式化預估價值
+  const formatEstimatedValue = (value?: number): string => {
+    if (!value) return "NT$ 6,400,000"; // 預設值
+    return `NT$ ${value.toLocaleString()}`;
+  };
+
+  // 生成估值描述
+  const getValuationDescription = (): string => {
+    if (assetData.estimatedValue && assetData.valuationData) {
+      return `基於 ${assetData.valuationData.matchCount} 筆實價登錄資料的自動估值`;
+    }
+    return "專業團隊正在進行估值";
+  };
+
+  const statusSteps = [
+    {
+      id: 1,
+      name: "資產提交",
+      icon: FileCheck,
+      status: "completed" as const,
+      description: "已成功提交資產資訊"
+    },
+    {
+      id: 2,
+      name: "初步審核",
+      icon: Clock,
+      status: "completed" as const,
+      description: "平台已通過初步審核"
+    },
+    {
+      id: 3,
+      name: "專業估值",
+      icon: Coins,
+      status: "in-progress" as const,
+      description: getValuationDescription(),
+      estimatedValue: formatEstimatedValue(assetData.estimatedValue)
+    },
+    {
+      id: 4,
+      name: "簽訂合約",
+      icon: FileSignature,
+      status: "pending" as const,
+      description: "等待估值完成後進行"
+    },
+    {
+      id: 5,
+      name: "NFT 鑄造",
+      icon: Loader2,
+      status: "pending" as const,
+      description: "等待合約簽訂後開始"
+    },
+  ];
   const { address } = useAccount(); // 獲取 imToken 連接的地址
   const [showContractDialog, setShowContractDialog] = useState(false);
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
@@ -180,17 +202,39 @@ export default function AssetStatus({ onViewNFT, assetData }: AssetStatusProps) 
                             {step.estimatedValue}
                           </p>
                         </div>
+
+                        {assetData.valuationData && (
+                          <div className="pt-2 border-t border-primary/10 space-y-2">
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <p className="text-muted-foreground">參考交易筆數</p>
+                                <p className="font-semibold">{assetData.valuationData.matchCount} 筆</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">價格區間</p>
+                                <p className="font-semibold">
+                                  NT$ {assetData.valuationData.priceRange.min.toLocaleString()} -
+                                  {assetData.valuationData.priceRange.max.toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground italic">
+                              * 資料來源：新北市政府不動產實價登錄系統
+                            </p>
+                          </div>
+                        )}
+
                         <div className="flex gap-2 pt-2">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             className="flex-1"
                             onClick={handleAcceptValuation}
                           >
                             接受
                           </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
+                          <Button
+                            size="sm"
+                            variant="outline"
                             className="flex-1"
                             onClick={() => console.log('拒絕估值')}
                           >

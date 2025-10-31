@@ -11,6 +11,15 @@ interface AssetData {
   description: string;
   address: string;
   assetType: string;
+  estimatedValue?: number;
+  valuationData?: {
+    matchCount: number;
+    priceRange: {
+      min: number;
+      max: number;
+    };
+    recentTransactions: any[];
+  };
 }
 
 interface NFTSuccessProps {
@@ -26,6 +35,19 @@ export default function NFTSuccess({ tokenId, transactionHash, assetData }: NFTS
   const displayTokenId = tokenId ? `#${tokenId.toString()}` : "#RWA-2025-001";
 
   const handleStartLoan = () => {
+    // 將估值資料儲存到 sessionStorage，供 loan-setup 頁面使用
+    if (typeof window !== "undefined" && assetData.estimatedValue) {
+      sessionStorage.setItem(
+        "assetValuation",
+        JSON.stringify({
+          estimatedValue: assetData.estimatedValue,
+          valuationData: assetData.valuationData,
+          assetName: assetData.name,
+          assetType: assetData.assetType,
+          assetAddress: assetData.address,
+        })
+      );
+    }
     router.push(`/loan-setup/${tokenId?.toString() || "RWA-2025-001"}`);
   };
 

@@ -19,6 +19,15 @@ interface AssetData {
   description: string;
   address: string;
   assetType: string;
+  estimatedValue?: number;
+  valuationData?: {
+    matchCount: number;
+    priceRange: {
+      min: number;
+      max: number;
+    };
+    recentTransactions: any[];
+  };
 }
 
 // NFT 鑄造結果介面
