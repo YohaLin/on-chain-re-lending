@@ -59,4 +59,10 @@ createWeb3Modal({
   enableAnalytics: false, // 開發時建議關閉
   themeMode: "light",
   defaultChain: sepolia, // 開發建議用測試網
+  // 移動端配置 - 優先顯示 imToken
+  featuredWalletIds: [
+    'ef333840daf915aafdc4a004525502d6d49d77bd9c65e0642dbaefb3c2893bef', // imToken
+  ],
+  // 允許所有錢包顯示
+  allWallets: 'SHOW',
 });

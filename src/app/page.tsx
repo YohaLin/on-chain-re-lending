@@ -9,19 +9,46 @@ import { useToast } from "@/hooks/use-toast";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
 import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
-import { walletConnect } from "@wagmi/connectors";
 // 確保 Web3Modal 配置被載入
 import "@/config/web3modal";
-import { projectId } from "@/config/web3modal";
+
+// 檢測是否為移動端
+const isMobile = () => {
+  if (typeof window === "undefined") return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
 
 export default function WalletConnect() {
   const [connecting, setConnecting] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
+  const [isCheckingConnection, setIsCheckingConnection] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
   const { open } = useWeb3Modal();
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
+
+  // 初始化時檢查連接狀態
+  useEffect(() => {
+    // 延遲檢查，給 WalletConnect 時間恢復會話
+    const timer = setTimeout(() => {
+      setIsCheckingConnection(false);
+
+      // 檢查是否從移動端錢包返回，且正在連接中
+      if (typeof window !== "undefined") {
+        const wasConnecting = localStorage.getItem("wallet_connecting");
+        if (wasConnecting === "true" && !isConnected) {
+          // 仍在等待連接，顯示提示
+          setConnecting(true);
+          toast({
+            title: "正在連接錢包",
+            description: "請在錢包應用中確認連接",
+          });
+        }
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [isConnected, toast]);
 
   const wallets = [
     {
@@ -40,8 +67,15 @@ export default function WalletConnect() {
 
   // 當錢包連接成功時自動跳轉
   useEffect(() => {
-    if (isConnected && address) {
+    if (isConnected && address && !isCheckingConnection) {
       setConnecting(false);
+
+      // 儲存連接標記到 localStorage，用於移動端返回檢測
+      if (typeof window !== "undefined") {
+        localStorage.setItem("wallet_connected", "true");
+        localStorage.setItem("wallet_address", address);
+      }
+
       toast({
         title: "錢包連接成功",
         description: `地址: ${address.slice(0, 6)}...${address.slice(-4)}`,
@@ -52,7 +86,7 @@ export default function WalletConnect() {
         router.push("/kyc-verification");
       }, 1500);
     }
-  }, [isConnected, address, router, toast]);
+  }, [isConnected, address, isCheckingConnection, router, toast]);
 
   const handleConnect = async (walletId: string) => {
     setSelectedWallet(walletId);
@@ -73,13 +107,46 @@ export default function WalletConnect() {
           });
         }
       } else if (walletId === "imtoken") {
-        // ImToken 透過 Web3Modal 顯示 WalletConnect QR code
-        // Web3Modal 會自動顯示 WalletConnect 選項和 QR code
+        // 在移動端標記正在連接，以便返回時檢測
+        if (isMobile() && typeof window !== "undefined") {
+          localStorage.setItem("wallet_connecting", "true");
+          localStorage.setItem("wallet_type", "imtoken");
+        }
+
+        // ImToken 透過 Web3Modal 顯示 WalletConnect
+        // 在移動端會自動打開 imToken 應用
         await open({ view: "Connect" });
+
+        // 移動端：設置一個監聽器，當頁面重新獲得焦點時檢查連接狀態
+        if (isMobile()) {
+          const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+              // 頁面重新可見，檢查是否已連接
+              const checkConnection = setInterval(() => {
+                if (isConnected) {
+                  clearInterval(checkConnection);
+                  localStorage.removeItem("wallet_connecting");
+                  document.removeEventListener("visibilitychange", handleVisibilityChange);
+                }
+              }, 500);
+
+              // 30秒後停止檢查
+              setTimeout(() => {
+                clearInterval(checkConnection);
+                localStorage.removeItem("wallet_connecting");
+                document.removeEventListener("visibilitychange", handleVisibilityChange);
+              }, 30000);
+            }
+          };
+          document.addEventListener("visibilitychange", handleVisibilityChange);
+        }
       }
     } catch (error) {
       console.error("連接失敗:", error);
       setConnecting(false);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("wallet_connecting");
+      }
       toast({
         title: "連接失敗",
         description: "請重試或選擇其他錢包",
@@ -153,6 +220,20 @@ export default function WalletConnect() {
               <li>• 請確保您使用的是官方錢包應用</li>
             </ul>
           </div>
+
+          {isMobile() && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="font-semibold mb-2 flex items-center gap-2 text-blue-900">
+                <span>📱</span>
+                移動端使用提示
+              </h4>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>• 點擊 ImToken 後會跳轉到錢包應用</li>
+                <li>• 在錢包中確認連接後，請手動返回此頁面</li>
+                <li>• 返回後系統會自動檢測連接狀態</li>
+              </ul>
+            </div>
+          )}
         </CardContent>
       </Card>
       </div>

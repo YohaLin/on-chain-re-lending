@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,21 +18,34 @@ import {
   QrCode,
   Smartphone,
   SkipForward,
+  ExternalLink,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDisconnect, useAccount } from "wagmi";
 // Self.xyz SDK
 import { SelfQRcodeWrapper, SelfAppBuilder } from "@selfxyz/qrcode";
 
+// 檢測是否為移動端
+const isMobile = () => {
+  if (typeof window === "undefined") return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
 export default function KYCVerification() {
   const [selfVerificationStatus, setSelfVerificationStatus] = useState<
     "idle" | "pending" | "success" | "error"
   >("idle");
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
 
   const router = useRouter();
   const { toast } = useToast();
   const { disconnect } = useDisconnect();
   const { address } = useAccount();
+
+  // 檢測移動端
+  useEffect(() => {
+    setIsMobileDevice(isMobile());
+  }, []);
 
   // 建立 Self App 配置（只有在有錢包地址時才建立）
   const selfApp = address
@@ -57,6 +70,79 @@ export default function KYCVerification() {
       description: "錢包已斷開連接",
     });
     router.push("/");
+  };
+
+  // 生成 Self App 深度連結
+  const getSelfDeepLink = () => {
+    if (!selfApp) return "";
+
+    // Self App 深度連結格式: self://verify?data=base64EncodedData
+    // 將 selfApp 配置編碼為 URL 參數
+    const appConfig = {
+      version: 2,
+      appName: process.env.SELF_APP_NAME || "on-chain-re-lending",
+      scope: "kyc-verification",
+      endpoint: process.env.NEXT_PUBLIC_SELF_ENDPOINT || "",
+      userId: address,
+      userIdType: "hex",
+      disclosures: {
+        minimumAge: 18,
+        nationality: true,
+      },
+    };
+
+    // 將配置轉為 base64
+    const configString = JSON.stringify(appConfig);
+    const base64Config = typeof window !== "undefined"
+      ? btoa(configString)
+      : "";
+
+    return `self://verify?data=${encodeURIComponent(base64Config)}`;
+  };
+
+  // 處理打開 Self App
+  const handleOpenSelfApp = () => {
+    const deepLink = getSelfDeepLink();
+
+    if (deepLink) {
+      setSelfVerificationStatus("pending");
+
+      // 標記正在驗證
+      if (typeof window !== "undefined") {
+        localStorage.setItem("self_verifying", "true");
+      }
+
+      toast({
+        title: "正在打開 Self App",
+        description: "請在 Self App 中完成驗證",
+      });
+
+      // 打開深度連結
+      window.location.href = deepLink;
+
+      // 設置返回監聽
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === "visible") {
+          // 檢查驗證狀態
+          setTimeout(() => {
+            const isVerifying = localStorage.getItem("self_verifying");
+            if (isVerifying === "true") {
+              toast({
+                title: "等待驗證",
+                description: "若已在 Self App 中完成驗證，請稍候",
+              });
+            }
+          }, 1000);
+        }
+      };
+
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+
+      // 30 秒後清理
+      setTimeout(() => {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+      }, 30000);
+    }
   };
 
   // 測試用：直接跳過驗證
@@ -102,74 +188,124 @@ export default function KYCVerification() {
         <Card>
           <CardHeader className="text-center">
             <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-              <QrCode className="w-8 h-8 text-primary" />
+              {isMobileDevice ? (
+                <Smartphone className="w-8 h-8 text-primary" />
+              ) : (
+                <QrCode className="w-8 h-8 text-primary" />
+              )}
             </div>
-            <CardTitle className="text-2xl">使用 Self App 掃描</CardTitle>
+            <CardTitle className="text-2xl">
+              {isMobileDevice ? "使用 Self App 驗證" : "使用 Self App 掃描"}
+            </CardTitle>
             <CardDescription>
-              請使用 Self App 掃描下方 QR Code 完成身份驗證
+              {isMobileDevice
+                ? "點擊下方按鈕打開 Self App 完成身份驗證"
+                : "請使用 Self App 掃描下方 QR Code 完成身份驗證"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* QR Code 區域 */}
-            <div className="flex flex-col items-center gap-4">
-              {/* Self QR Code Wrapper */}
-              {selfApp ? (
-                <div className="w-full flex justify-center">
-                  <SelfQRcodeWrapper
-                    selfApp={selfApp}
-                    onSuccess={() => {
-                      console.log("Self 驗證成功");
-                      setSelfVerificationStatus("success");
-                      toast({
-                        title: "驗證成功",
-                        description: "您的身份已通過 Self 驗證",
-                      });
-                      setTimeout(() => {
-                        router.push("/asset-tokenization");
-                      }, 1500);
-                    }}
-                    onError={() => {
-                      console.error("Self 驗證錯誤");
-                      setSelfVerificationStatus("error");
-                      toast({
-                        title: "驗證失敗",
-                        description: "請稍後再試或聯繫客服",
-                        variant: "destructive",
-                      });
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="w-64 h-64 bg-muted rounded-lg flex items-center justify-center border-2 border-dashed">
-                  <div className="text-center space-y-2 p-4">
-                    <Loader2 className="w-12 h-12 mx-auto text-muted-foreground animate-spin" />
-                    <p className="text-sm text-muted-foreground">
-                      請先連接錢包
-                    </p>
+            {/* 移動端：顯示按鈕 */}
+            {isMobileDevice ? (
+              <div className="flex flex-col items-center gap-4">
+                {selfApp ? (
+                  <>
+                    <Button
+                      size="lg"
+                      className="w-full max-w-md"
+                      onClick={handleOpenSelfApp}
+                      disabled={selfVerificationStatus === "pending"}
+                    >
+                      {selfVerificationStatus === "pending" ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          等待驗證中...
+                        </>
+                      ) : (
+                        <>
+                          <ExternalLink className="w-5 h-5 mr-2" />
+                          打開 Self App 進行驗證
+                        </>
+                      )}
+                    </Button>
+
+                    <div className="p-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800 w-full">
+                      <p className="text-sm text-amber-800 dark:text-amber-200 text-center">
+                        💡 點擊按鈕會打開 Self App，完成驗證後請手動返回此頁面
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full p-8 bg-muted rounded-lg flex items-center justify-center border-2 border-dashed">
+                    <div className="text-center space-y-2">
+                      <Loader2 className="w-12 h-12 mx-auto text-muted-foreground animate-spin" />
+                      <p className="text-sm text-muted-foreground">
+                        請先連接錢包
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+            ) : (
+              /* 桌面端：顯示 QR Code */
+              <div className="flex flex-col items-center gap-4">
+                {selfApp ? (
+                  <div className="w-full flex justify-center">
+                    <SelfQRcodeWrapper
+                      selfApp={selfApp}
+                      onSuccess={() => {
+                        console.log("Self 驗證成功");
+                        setSelfVerificationStatus("success");
+                        if (typeof window !== "undefined") {
+                          localStorage.removeItem("self_verifying");
+                        }
+                        toast({
+                          title: "驗證成功",
+                          description: "您的身份已通過 Self 驗證",
+                        });
+                        setTimeout(() => {
+                          router.push("/asset-tokenization");
+                        }, 1500);
+                      }}
+                      onError={() => {
+                        console.error("Self 驗證錯誤");
+                        setSelfVerificationStatus("error");
+                        if (typeof window !== "undefined") {
+                          localStorage.removeItem("self_verifying");
+                        }
+                        toast({
+                          title: "驗證失敗",
+                          description: "請稍後再試或聯繫客服",
+                          variant: "destructive",
+                        });
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-64 h-64 bg-muted rounded-lg flex items-center justify-center border-2 border-dashed">
+                    <div className="text-center space-y-2 p-4">
+                      <Loader2 className="w-12 h-12 mx-auto text-muted-foreground animate-spin" />
+                      <p className="text-sm text-muted-foreground">
+                        請先連接錢包
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
-              {selfVerificationStatus === "pending" && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>等待驗證中...</span>
-                </div>
-              )}
+            {/* 驗證狀態顯示 */}
+            {selfVerificationStatus === "success" && (
+              <div className="flex items-center justify-center gap-2 text-sm text-green-600">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>驗證成功！</span>
+              </div>
+            )}
 
-              {selfVerificationStatus === "success" && (
-                <div className="flex items-center gap-2 text-sm text-green-600">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>驗證成功！</span>
-                </div>
-              )}
-
-              {selfVerificationStatus === "error" && (
-                <div className="flex items-center gap-2 text-sm text-red-600">
-                  <span>❌ 驗證失敗，請重試</span>
-                </div>
-              )}
-            </div>
+            {selfVerificationStatus === "error" && (
+              <div className="flex items-center justify-center gap-2 text-sm text-red-600">
+                <span>❌ 驗證失敗，請重試</span>
+              </div>
+            )}
 
             {/* 測試用跳過按鈕 */}
             <div className="border-t pt-6">
@@ -201,12 +337,22 @@ export default function KYCVerification() {
                 </li>
                 <li className="flex gap-2">
                   <span className="font-semibold text-foreground">3.</span>
-                  <span>掃描此頁面的 QR Code</span>
+                  <span>
+                    {isMobileDevice
+                      ? "點擊上方按鈕打開 Self App"
+                      : "掃描此頁面的 QR Code"}
+                  </span>
                 </li>
                 <li className="flex gap-2">
                   <span className="font-semibold text-foreground">4.</span>
                   <span>授權分享年齡和國籍資訊</span>
                 </li>
+                {isMobileDevice && (
+                  <li className="flex gap-2">
+                    <span className="font-semibold text-foreground">5.</span>
+                    <span>完成後手動返回此頁面</span>
+                  </li>
+                )}
               </ol>
             </div>
 
