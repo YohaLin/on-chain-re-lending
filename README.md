@@ -1,5 +1,6 @@
 # 房地產 RWA 借貸平台
 網址：https://on-chain-re-lending.vercel.app/welcome
+Figma: https://www.figma.com/design/N5elDr9ZVv1yPNvK01etyy/RWA-%E8%B3%87%E7%94%A2%E5%80%9F%E8%B2%B8%E5%B9%B3%E5%8F%B0-for-%E8%A9%95%E5%AF%A9?node-id=0-1&t=2gUNwatu2wPNFlYU-1
 
 基於 Oasis Sapphire 區塊鏈的去中心化房地產代幣化與再貸款平台。本黑客松專案讓用戶能將真實世界資產 (RWA) 代幣化為 NFT，並立即獲得抵押貸款流動性。
 
