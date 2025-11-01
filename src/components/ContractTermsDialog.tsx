@@ -180,11 +180,11 @@ const ContractTermsDialog = ({
           </div>
         </div>
 
-        <div className="p-6 pt-4 space-y-3 border-t">
+        <div className="flex gap-4 items-center justify-end p-6 pt-4  border-t">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="w-full rounded-full"
+            className="w-fit rounded-full"
             size="lg"
           >
             取消
@@ -192,7 +192,7 @@ const ContractTermsDialog = ({
           <Button
             onClick={handleConfirm}
             disabled={!hasScrolledToBottom}
-            className="w-full rounded-full font-semibold"
+            className="w-fit rounded-full font-semibold"
             size="lg"
           >
             我已仔細閱讀並完全理解上述合約條款
