@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, FileText, AlertCircle, Lock } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import Link from "next/link";
 
 export default function LoanConfirm() {
   const router = useRouter();
@@ -132,8 +133,8 @@ export default function LoanConfirm() {
               <div>
                 <p className="font-semibold mb-1">到期還款</p>
                 <p className="text-muted-foreground">
-                  您需在 {dueDate.toLocaleDateString("zh-TW")} 前歸還借款本金{" "}
-                  ${loanAmount.toLocaleString()}。
+                  您需在 {dueDate.toLocaleDateString("zh-TW")} 前歸還借款本金 $
+                  {loanAmount.toLocaleString()}。
                 </p>
               </div>
             </div>
@@ -150,12 +151,15 @@ export default function LoanConfirm() {
             </div>
             <div className="flex items-start gap-3">
               <div className="w-6 h-6 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-xs font-semibold text-destructive">3</span>
+                <span className="text-xs font-semibold text-destructive">
+                  3
+                </span>
               </div>
               <div>
                 <p className="font-semibold mb-1 text-destructive">違約後果</p>
                 <p className="text-muted-foreground">
-                  若未能在到期日前還款，您的抵押資產 NFT 將被平台處置以償還債務。
+                  若未能在到期日前還款，您的抵押資產 NFT
+                  將被平台處置以償還債務。
                 </p>
               </div>
             </div>
@@ -173,9 +177,14 @@ export default function LoanConfirm() {
                   點擊查看完整的法律條款與細則
                 </p>
               </div>
-              <Button variant="ghost" size="sm">
-                查看
-              </Button>
+              <Link
+                target="_blank"
+                href="https://docs.google.com/document/d/10gU-XE7OoqFH2fFbDHDa-qGqU_LQh9N3jC5I9lydRI4/edit?usp=sharing"
+              >
+                <Button variant="ghost" size="sm">
+                  查看
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
@@ -193,7 +202,8 @@ export default function LoanConfirm() {
                 htmlFor="terms"
                 className="text-sm font-medium leading-relaxed cursor-pointer"
               >
-                我已閱讀並完全理解上述借款條款，同意將我的資產 NFT 作為抵押品進行鎖定，並承諾按時還款。我了解若逾期未還款，平台有權處置我的抵押資產。
+                我已閱讀並完全理解上述借款條款，同意將我的資產 NFT
+                作為抵押品進行鎖定，並承諾按時還款。我了解若逾期未還款，平台有權處置我的抵押資產。
               </label>
             </div>
           </CardContent>
@@ -201,7 +211,11 @@ export default function LoanConfirm() {
 
         {/* 操作按鈕 */}
         <div className="flex gap-4">
-          <Button variant="outline" className="flex-1" onClick={() => router.back()}>
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={() => router.back()}
+          >
             返回修改
           </Button>
           <Button
