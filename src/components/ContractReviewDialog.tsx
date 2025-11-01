@@ -202,7 +202,7 @@ export default function ContractReviewDialog({
               such value fluctuations or any losses arising therefrom. The User
               is responsible for ensuring that all information provided about
               the asset is true and accurate, and will bear any consequences of
-              using assets unlawfully or infringing on others' rights. Each
+              using assets unlawfully or infringing on others&apos; rights. Each
               asset proposed for NFT minting must undergo a valuation by an
               independent third-party appraiser designated or approved by the
               Platform, and the resulting appraisal report will be retained by
