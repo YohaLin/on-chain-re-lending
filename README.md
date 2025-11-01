@@ -73,12 +73,14 @@ graph TB
 ## 核心功能
 
 ### 🏠 資產代幣化
+
 - 支援多種資產類型：房地產、藝術品、珠寶、車輛
 - 使用政府實價登錄資料進行即時估價
 - 基於 IPFS 的 NFT 元數據儲存
 - 在 Oasis Sapphire 鏈上鑄造 ERC721 NFT
 
 ### 🔐 身份驗證 (Self Protocol 整合)
+
 - 使用 Self.xyz 進行隱私保護身份驗證
 - 透過 Self App 進行 NFC 護照掃描
 - 零知識證明 (ZK-SNARKs) 技術
@@ -86,12 +88,14 @@ graph TB
 - 符合法規要求的 KYC 流程
 
 ### 💼 錢包整合 (imToken 贊助商)
+
 - 透過 WalletConnect 協議無縫連接
 - 支援手機深度連結 (Deep-linking)
 - 優先顯示的特色錢包
 - 交易簽署與授權流程
 
 ### 💰 貸款管理
+
 - 基於 NFT 價值的抵押貸款
 - 貸款成數：50-60% LTV
 - 彈性貸款期限：30/90/180/365 天
@@ -99,6 +103,7 @@ graph TB
 - 數位簽名授權
 
 ### 📊 投資組合儀表板
+
 - 即時錢包餘額追蹤
 - RWA 資產庫存
 - 活躍貸款總覽
@@ -107,6 +112,7 @@ graph TB
 ## 技術架構
 
 ### 前端技術
+
 - **框架**: Next.js 14 (App Router)
 - **語言**: TypeScript 5
 - **UI 函式庫**: React 18
@@ -116,18 +122,21 @@ graph TB
 - **畫布**: Fabric.js (數位簽名)
 
 ### Web3 技術
+
 - **區塊鏈**: Oasis Sapphire (Chain ID: 23295 測試網)
 - **錢包**: Wagmi 2.19.1 + Viem 2.38.5
 - **連接**: Web3Modal 5.1.11 + WalletConnect v2
 - **合約**: PropertyNFT (ERC721)
 
 ### 後端 / API
+
 - **執行環境**: Next.js API Routes
 - **KYC**: Self.xyz SDK (@selfxyz/core 1.1.0-beta.7)
 - **資料來源**: 新北市政府不動產實價登錄 API
 - **儲存**: Pinata IPFS
 
 ### 狀態管理
+
 - **客戶端**: React Hooks + SessionStorage
 - **伺服器**: TanStack React Query 5.90.5
 - **Web3**: Wagmi hooks
@@ -137,6 +146,7 @@ graph TB
 ### 🟢 imToken 整合
 
 **整合內容**:
+
 - **特色錢包**: 在 Web3Modal 錢包列表中優先顯示
 - **錢包 ID**: `ef333840daf915aafdc4a004525502d6d49d77bd9c65e0642dbaefb3c2893bef`
 - **協議**: WalletConnect v2
@@ -146,12 +156,14 @@ graph TB
   - `imtoken://open`
 
 **使用場景**:
+
 - ✅ 錢包連接與身份驗證
 - ✅ NFT 鑄造的交易簽署
 - ✅ 貸款合約授權
 - ✅ 資產轉移授權
 
 **程式碼整合點**:
+
 1. [Web3Modal 配置](src/config/web3modal.ts) - 特色錢包設定
 2. [錢包連接頁面](src/app/page.tsx) - 手機偵測與深度連結
 3. [NFT 鑄造](src/utils/propertyNFT.ts) - 透過 imToken 簽署交易
@@ -161,6 +173,7 @@ graph TB
 ### 🔵 Self Protocol 整合
 
 **整合內容**:
+
 - **SDK 版本**: @selfxyz/core 1.1.0-beta.7
 - **驗證類型**: 年齡 + 國籍 (KYC)
 - **技術**: 零知識證明 (zk-SNARKs)
@@ -168,17 +181,20 @@ graph TB
 - **驗證範圍**: "kyc-verification"
 
 **使用場景**:
+
 - ✅ 資產代幣化前的身份驗證
 - ✅ 年齡與國籍揭露
 - ✅ 符合監管要求
 - ✅ 隱私保護的用戶認證
 
 **程式碼整合點**:
+
 1. [KYC 驗證頁面](src/app/kyc-verification/page.tsx) - QR Code 生成與驗證流程
 2. [後端驗證器](src/app/api/kyc/self-verify/route.ts) - 證明驗證與認證
 3. [資產代幣化流程](src/app/asset-tokenization/page.tsx) - 鑄造前的 KYC 狀態檢查
 
 **Self.xyz 使用元件**:
+
 - `SelfQRcodeWrapper`: 桌面版 QR Code 顯示
 - `SelfAppBuilder`: 驗證請求配置
 - `SelfBackendVerifier`: 伺服器端證明驗證
@@ -187,6 +203,7 @@ graph TB
 ## 智能合約
 
 ### PropertyNFT 合約
+
 - **網路**: Oasis Sapphire 測試網
 - **Chain ID**: 23295
 - **合約地址**: `0x077EA4EEB46Fdf1F406E108e52fd463764d73383`
@@ -246,6 +263,7 @@ sequenceDiagram
 ## 快速開始
 
 ### 環境需求
+
 - Node.js 18+
 - Yarn 套件管理器
 - imToken 錢包 (手機版)
@@ -309,12 +327,14 @@ yarn lint
 ### 使用 imToken 錢包
 
 **桌面版**:
+
 1. 在瀏覽器開啟應用程式
 2. 點擊「連接錢包」
 3. 使用 imToken 手機 App 掃描 QR Code
 4. 授權連接
 
 **手機版**:
+
 1. 在手機瀏覽器開啟應用程式
 2. 點擊「連接錢包」
 3. 應用程式自動透過深度連結開啟 imToken
@@ -323,6 +343,7 @@ yarn lint
 ### 使用 Self Protocol 進行 KYC 驗證
 
 **桌面版**:
+
 1. 前往 KYC 驗證頁面
 2. 系統自動顯示 QR Code
 3. 在手機開啟 Self App
@@ -331,6 +352,7 @@ yarn lint
 6. 零知識證明生成並驗證
 
 **手機版**:
+
 1. 前往 KYC 驗證頁面
 2. 點擊驗證按鈕
 3. Self App 透過深度連結開啟
@@ -369,9 +391,11 @@ src/
 ## API 端點
 
 ### POST /api/kyc/self-verify
+
 驗證 Self.xyz 零知識證明用於 KYC 驗證。
 
 **請求 Body**:
+
 ```json
 {
   "attestation": "...",
@@ -381,6 +405,7 @@ src/
 ```
 
 **回應**:
+
 ```json
 {
   "success": true,
@@ -393,12 +418,15 @@ src/
 ```
 
 ### GET /api/property-valuation
+
 從新北市政府 API 取得房產估價。
 
 **查詢參數**:
+
 - `address`: 完整房產地址
 
 **回應**:
+
 ```json
 {
   "success": true,
@@ -422,18 +450,6 @@ src/
 - **智能合約**: 僅管理員可鑄造，符合 ERC721 標準
 - **IPFS 儲存**: 透過 Pinata 進行不可變元數據儲存
 - **API 安全**: 伺服器端驗證所有加密證明
-
-## 黑客松贊助商
-
-### 🟢 imToken
-- **類別**: Web3 錢包基礎設施
-- **整合內容**: WalletConnect 協議、特色錢包支援
-- **使用場景**: 錢包連接、交易簽署、資產管理
-
-### 🔵 Self Protocol
-- **類別**: 去中心化身份與 KYC
-- **整合內容**: 零知識證明驗證、NFC 護照掃描
-- **使用場景**: 隱私保護 KYC、年齡驗證、合規性
 
 ## 授權條款
 
