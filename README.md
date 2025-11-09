@@ -1,4 +1,8 @@
 # 房地產 RWA 借貸平台
+
+## 專案影片
+
+<video src="assets/估值1B的獨角獸.mp4" controls width="600"></video>
 網址：https://on-chain-re-lending.vercel.app/welcome
 Figma: https://www.figma.com/design/N5elDr9ZVv1yPNvK01etyy/RWA-%E8%B3%87%E7%94%A2%E5%80%9F%E8%B2%B8%E5%B9%B3%E5%8F%B0-for-%E8%A9%95%E5%AF%A9?node-id=0-1&t=2gUNwatu2wPNFlYU-1
 
